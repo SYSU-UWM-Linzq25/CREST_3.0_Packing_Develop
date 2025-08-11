@@ -1,0 +1,48 @@
+0: MATLAB is selecting SOFTWARE OPENGL rendering.
+0: 
+0:                             < M A T L A B (R) >
+0:                   Copyright 1984-2016 The MathWorks, Inc.
+0:                    R2016a (9.0.0.341360) 64-bit (glnxa64)
+0:                              February 11, 2016
+0: 
+0:  
+0: To get started, type one of these: helpwin, helpdesk, or demo.
+0: For product information, visit www.mathworks.com.
+0:  
+0: 
+0: 	Academic License
+0: 
+0: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+0: %         CREST v3.0, released Jan. 2016         %
+0: % COUPLED ROUTING AND EXCESS STORAGE (UCONN)     %
+0: %      contact: xinyi.shen@uconn.edu             %
+0: %               manos@engr.uconn.edu             %
+0: %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+0: configuring environment...
+0: [Warning: not a windows x64 system.\n Users need to compile the GDAL library
+0: themselves.] 
+0: [> In CREST (line 25)] 
+0: loading GDAL v1.11.0...
+0: {Error using fgets
+0: Invalid file identifier. Use fopen to generate a valid file identifier.
+0: 
+0: Error in fgetl (line 33)
+0: [tline,lt] = fgets(fid);
+0: 
+0: Error in GlobalParameters.readLine (line 4)
+0:     tline = fgetl(gfileID);
+0: 
+0: 
+0: Error in GlobalParameters.ReadTimeLine (line 3)
+0: timeMark=GlobalParameters.readLine(gfileID,keyMark,commentSymbol,'string');
+0: 
+0: 
+0: Error in GlobalParameters (line 68)
+0:                GlobalParameters.ReadTimeLine(gfileID,commentSymbol,...
+0: 
+0: 
+0: Error in CREST (line 31)
+0: globalPar=GlobalParameters(globalCtlFile);
+0: 
+0: } 
+0: >> 

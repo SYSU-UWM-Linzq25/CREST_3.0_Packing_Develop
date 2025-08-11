@@ -1,0 +1,11 @@
+function dispose(this,coreList,LocalDir)
+%% leading core clean the local folder after confirming all workers in this node have finished.
+for i=1:length(coreList)
+    notifiedName=[this.comNodeFolder,num2str(coreList(i)),'.finished'];
+    while exist(notifiedName,'file')~=2
+        pause(2);
+    end
+end
+delete([this.comNodeFolder,'*.finished']);
+rmdir(LocalDir,'s');
+end

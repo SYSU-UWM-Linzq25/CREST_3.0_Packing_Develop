@@ -1,0 +1,1 @@
+mex -I/mnt/permanent/hydro/apps/gdal/2.3.0/include -L/mnt/permanent/hydro/apps/gdal/2.3.0/lib -lgdal IsGeographic.cpp

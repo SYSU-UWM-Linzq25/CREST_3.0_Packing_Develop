@@ -1,0 +1,359 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>canopy_energy_balance</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-22"><meta name="DC.source" content="canopy_energy_balance.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#4">writen by Shen, Xinyi, April, 2015</a></li><li><a href="#5">Algorithm Description</a></li><li><a href="#6">output arguments</a></li><li><a href="#7">input arguments</a></li><li><a href="#8">Stefam-Boltzmann law for blackbody</a></li><li><a href="#9">sublimation in(mm)</a></li><li><a href="#10">sensible heat flux</a></li><li><a href="#11">advected energy flux</a></li><li><a href="#12">heat storage change in the intercepted snow %CREST only</a></li><li><a href="#13">energy budget</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> [error,<span class="keyword">...</span>
+</pre><pre class="codeinput">          vaporFluxSub,vaporFluxEvapCanopy,vaporFluxTranspir,<span class="keyword">...</span><span class="comment">%vapor fluxes in (mm)</span>
+          refreezeEnergy,meltEnergy]=canopy_energy_balance(Tfoliage,<span class="keyword">...</span>
+                dt,elevation,<span class="keyword">...</span>
+                rarc,r0c,RGL,Wim,Wcr,Wwp,<span class="keyword">...</span>
+                W,intRainOrg,intSnowOrg,Tcanopy,TfoliageOld,RaC,<span class="keyword">...</span><span class="comment">...</span>
+</pre><pre class="codeinput">                rainfall,snowfall,netShortOver,longOverIn,longUnderOut,LAI,<span class="keyword">...</span>
+                wind,airDens,press,eActAir,VPD,Le,<span class="keyword">...</span>
+                ref_height,displacement,roughness)
+</pre><h2>writen by Shen, Xinyi, April, 2015<a name="4"></a></h2><p>contact: <a href="mailto:xinyi.shen@uconn.edu">xinyi.shen@uconn.edu</a></p><h2>Algorithm Description<a name="5"></a></h2><p>calculate the energy balance of the foliage layer when there is intercepted or packed snow.</p><p><img src="canopy_energy_balance_eq78857.png" alt="$$Int_{snow} +Pack_{snow}&gt;0$"></p><p>Energy balance is solved WITHIN the FOLIAGE and the boundary of this medium is ONLY the surrounding air of the canopy.</p><p><img src="canopy_energy_balance_eq62301.png" alt="$$CASE1:  \, and \, (Int_{rain}&gt;0\,or\,Int_{snow})&gt;0$"></p><p><img src="canopy_energy_balance_eq26212.png" alt="$$ T_{foliage} \not= T_{canopy}, T_{foliage} \not= T_{air}, T_{canopy} \not= T_{air},T_{foliage}<=0$$"></p><p>The energy budget MUST be balanced within the foliage medium by adjust <img src="canopy_energy_balance_eq46724.png" alt="$$T_{foliage}$">.</p><p>Only the over portion of radiation is used as input in this circumstance.</p><p>if there is intercepted snow, no evapotranspiration but sublimation happens.</p><p><img src="canopy_energy_balance_eq35939.png" alt="$$CASE 2:Int_{snow}=0,Int_{rain}=0$"></p><p><img src="canopy_energy_balance_eq40446.png" alt="$$ T_{canopy}=T_{air}=T_{foliage} $$"></p><p>There is no energy balance,refreezing or melting process within this medium.</p><p>The foliage and snowpack will be treated as one medium to solve the energy balance.</p><p>The total radiation is imposed on the foliage medium first to estimate the evapotranspiration.</p><p>Then the "error" in the foliage medium will be input to balance of the budget of the snowpack layer.</p><h2>output arguments<a name="6"></a></h2><p>error (J/m^2): total energy balance. error=0 indecates the foliage (canopy) layer is balanced vaporFluxSub (mm): vapor flux due to sublimation vaporFluxEvapCanopy (mm): evaporation from intercepted rain vaporFluxTranspir (mm): evaporated vapor due to transpiration refreezeEnergy(J/m^2): released energy due to refreezing meltEnergy(J/m^2): absorbed energy due to intercepted snow melting</p><h2>input arguments<a name="7"></a></h2><p><img src="canopy_energy_balance_eq36858.png" alt="$$T_{foliage}(^oC)$"> : temperature of the canopy material</p><p>dt (s): time interval, <img src="canopy_energy_balance_eq00382.png" alt="$$\Delta t$"></p><p>elevation (m): DEM</p><p>r_arc <img src="canopy_energy_balance_eq51155.png" alt="$$(sm^{-1})$"> : canopy architectural resistance of evaporation</p><p>r0c <img src="canopy_energy_balance_eq49214.png" alt="$$(sm^{-1}): r_{0c},$">  minimum canopy resistance</p><p>RGL:(W/m^2): Value of solar radiation below which will be no transpiration (ranges from 30 W/m^2 for trees to ~100 W/m^2 for crops)</p><p><img src="canopy_energy_balance_eq92235.png" alt="$$W_{im} (mm)$"> : interception capacity,</p><p><img src="canopy_energy_balance_eq71117.png" alt="$$W_{cr} (mm):$"> critical point of soil moisture</p><p><img src="canopy_energy_balance_eq33236.png" alt="$$W_{wp} (mm):$"> wilting point of soil moisture</p><p>intSnowOrg (mm): acccumulated intercepted snow in the vegetation layer</p><p><img src="canopy_energy_balance_eq99189.png" alt="$$T_{canopy} (C)$"> : temperature of the surrounding air of canopy</p><p><img src="canopy_energy_balance_eq81969.png" alt="$$T_{foliageOld} (C)$"> : foliage temperature of the last time step</p><p>rainfall(mm) : newly intercepted rainfall</p><p>snowfall(mm) : newly intercepted snowfall</p><p>netShortOver (W/m^2) : net shortwave radiation of the canopy layer(incoming-reflected)</p><p>longOverIn (W/m^2): atmospheric incoming long wave radiation</p><p>longUnderOut (W/m^2): outgoing long wave radiation from underneath surface (snowpack or soil), not needed in this function</p><p>LAI : leaf area index</p><p>wind (m/s): wind speed at the near-surface reference height <img src="canopy_energy_balance_eq20432.png" alt="$$U_z$"></p><p>airDens <img src="canopy_energy_balance_eq54253.png" alt="$$(kgm^{-3}): \rho_{a}$">, air density</p><p>press (kPa): atmosphere pressure, <img src="canopy_energy_balance_eq51853.png" alt="$$ P_{a}$"></p><p>eActAir (kPa): atmospheric vapor pressure (kPa), accoridng to, it varies with height, <img src="canopy_energy_balance_eq98457.png" alt="$$e_{a}$"></p><p>VPD (kPa): vapor pressure deficit, <img src="canopy_energy_balance_eq01868.png" alt="$$\delta e$"></p><p>Le (J/g): latent heats, <img src="canopy_energy_balance_eq90184.png" alt="$$L_{water}$"></p><p>RaC <img src="canopy_energy_balance_eq51155.png" alt="$$(sm^{-1})$">: aerodynamic resistance of the canopy</p><p>ref_height (m): reference height of the wind measurement, z</p><p>displacement(m): displacement caused by canopy layer (usually 2/3h) <img src="canopy_energy_balance_eq93704.png" alt="$$d_s$"></p><p>roughness(m): vegetation roughness <img src="canopy_energy_balance_eq30576.png" alt="$$z_0$"></p><pre class="codeinput"><span class="keyword">global</span> KELVIN STEFAN HUGE_RESIST RHO_W Ls0 JOULESPCAL GRAMSPKG Lf CH_ICE CH_WATER EPS m2mm
+nCells=length(Tfoliage);
+TFoliageInK = Tfoliage + KELVIN;
+</pre><h2>Stefam-Boltzmann law for blackbody<a name="8"></a></h2><p>total energy radiated per unit surface area of a black body across all wavelengths per unit time</p><p><img src="canopy_energy_balance_eq68508.png" alt="$j^{\star} = \sigma T^{4}$"></p><pre class="codeinput">longOverOut = STEFAN * TFoliageInK.^4;
+<span class="comment">% note that the energy balance is calculated within the foliage medium</span>
+<span class="comment">% whose ONLY boundary is the canopy air. surface flux is incorrectly</span>
+<span class="comment">% included by VIC</span>
+<span class="comment">% netRad = netShortOver + longOverIn + longUnderOut - 2*longOverOut; %VIC (wrong one)</span>
+netRad = netShortOver + longOverIn - 2*LongOverOut; <span class="comment">%CREST (correct one)</span>
+intSnow=intSnowOrg+snowfall;
+hasIntSnow=intSnow&gt;0;
+hasWind=wind&gt;0;
+hasIntSnowAndWind=hasIntSnow&amp;hasWind;
+<span class="comment">% Calculate the vapor mass flux between intercepted snow in</span>
+<span class="comment">% the canopy and the surrounding air mass **/</span>
+esSnow = saturatedVaporPressure(Tfoliage(hasIntSnow));
+<span class="comment">% we use AR_410 as options.AERO_RESIST_CANSNOW</span>
+<span class="comment">% double check the RaC</span>
+RaC(hasIntSnowAndWind)=RaC(hasIntSnowAndWind)./<span class="keyword">...</span>
+    StabilityCorrection(ref_height(hasIntSnowAndWind), displacement(hasIntSnowAndWind), <span class="keyword">...</span>
+           Tfoliage(hasIntSnowAndWind),Tcanopy(hasIntSnowAndWind), <span class="keyword">...</span>
+           wind(hasIntSnowAndWind), roughness(hasIntSnowAndWind));
+RaC(hasIntSnow&amp;(~hasWind))=HUGE_RESIST;
+</pre><pre class="codeoutput error">Error using canopy_energy_balance (line 104)
+Not enough input arguments.
+</pre><h2>sublimation in(mm)<a name="9"></a></h2><p><img src="canopy_energy_balance_eq09133.png" alt="$V=f(u_z)(e_z-e_{sur})$"></p><p>where</p><p>V(m/s)is the transferred vapor amount(negative value means the flux is from the snow surface to the air)</p><p><img src="canopy_energy_balance_eq58113.png" alt="$f(u_z)$"> is the wind function mm/kPa/s</p><p><img src="canopy_energy_balance_eq39860.png" alt="$f(u_z)=\frac{\rho_a EPS}{P_a \rho_w}10^6/R_{ac}$"></p><pre class="codeinput">vaporMassFlux= airDens(hasIntSnow).*(EPS./press(hasIntSnow)).*<span class="keyword">...</span>
+    (eActAir(hasIntSnow) - esSnow)./RaC(hasIntSnow)/RHO_W; <span class="comment">%(A4)</span>
+<span class="comment">% sublimation will not happen when the vapor in the air is saturated</span>
+vaporMassFlux((vaporMassFlux&lt;0 &amp; VPD(hasIntSnow)==0))=0;
+vaporMassFlux=min(vaporMassFlux,intSnow(hasSnow)/m2mm);<span class="comment">%CREST corrected, vapor flux of sublimation cannot exceed the intercepted snow</span>
+Ls = (Ls0 - 0.07 * Tfoliage(hasIntSnow)) * JOULESPCAL * GRAMSPKG;
+<span class="comment">% for grids has no intercepted snow, evapotranspiration happens</span>
+<span class="comment">% the surface water is not accounted in the evapotranspiration process when there is snow pack on the ground</span>
+[AET,actEvapCanopy,~,actTranspir] = canopy_ET(false, dt, elevation(~hasIntSnow), Wim(~hasIntSnow),intRainOrg(~hasIntSnow),<span class="keyword">...</span>
+			[], Wcr(~hasIntSnow), Wwp(~hasIntSnow), W(~hasIntSnow), <span class="keyword">...</span>
+			rainfall(~hasIntSnow),Tcanopy(~hasIntSnow),<span class="keyword">...</span>
+            VPD(~hasIntSnow), LAI(~hasIntSnow),netRad(~hasIntSnow), <span class="keyword">...</span>
+            netShortOver(~hasIntSnow),RaC(~hasIntSnow),rarc(~hasIntSnow),<span class="keyword">...</span>
+			r0c(~hasIntSnow),RGL(~hasIntSnow));
+<span class="comment">%latent heat needed for sublimation</span>
+<span class="comment">%latent heat for sublimation in cells with intercepted snow</span>
+latentHeatSub = Ls.* vaporMassFlux * RHO_W;<span class="comment">% VIC(have not considered the insufficiency of intercepted snow)</span>
+<span class="comment">% latent heat for evapotranspiration in cells without intercepted snow</span>
+latentHeat= Le(~hasIntSnow).*AET/m2mm * RHO_W;
+</pre><h2>sensible heat flux<a name="10"></a></h2><pre class="codeinput">sensibleHeat = AirDens.* CP_PM * (Tcanopy - Tfoliage) ./ RaC;
+</pre><h2>advected energy flux<a name="11"></a></h2><p>advectedEnergy = 4186.8 * Tcanopy.* rainfall/m2mm/dt;%VIC(wrong, rainfall in VIC is total rainfall)</p><pre class="codeinput">advectedEnergy = 4186.8 * (Tcanopy - Tfoliage).* rainfall/m2mm/dt;<span class="comment">%CREST</span>
+</pre><h2>heat storage change in the intercepted snow %CREST only<a name="12"></a></h2><pre class="codeinput">dTAboveZero=(Tfoliage&gt;0).*Tfoliage-(TfoliageOld&gt;0).*TfoliageOld;
+dTBelowZero=(Tfoliage&lt;0).*Tfoliage-(TfoliageOld&lt;0).*TfoliageOld;
+deltaCC=(intSnowOrg+intRainOrg).*(dTBelowZero*CH_ICE+dTAboveZero*CH_WATER)/dt;
+</pre><h2>energy budget<a name="13"></a></h2><pre class="codeinput">error = sensibleHeat+netRad+advectedEnergy;
+error(~hasIntSnow)=error(~hasIntSnow)+ latentHeat;
+error(hasIntSnow)=error(hasIntSnow)+ latentHeatSub-deltaCC;
+<span class="comment">% refreezing &amp; melting Energy processes</span>
+<span class="comment">% refreezing and melting capacities, the maximum refreeze Energy that CAN BE used to balance the energy budget</span>
+<span class="comment">% refreezeEnergy(~hasIntSnow)=0;</span>
+refreezeCap= (intRainOrg+nIntRain)/m2mm*Lf*RHO_W/dt;
+<span class="comment">% the maximum melting energy that CAN BE used to balance the energy budget</span>
+meltCap=-intSnow*Lf*RHO_W/dt;
+<span class="comment">% For cells with intercepted snow and the temperature of foliage (intercepted snow) is below zero,</span>
+<span class="comment">% all intercepted rain must be frozen</span>
+bNegtiveBudget=error&lt;0;
+bZeroTemp=Tfoliage==0;
+bPosTemp=Tfoliage&gt;0;
+bNegTemp=Troliage&lt;0;
+refreezeEnergy=zeros(nCells,1);
+meltEnergy=zeros(nCells,1);
+vaporFluxSub=zeros(nCells,1);
+vaporFluxEvapCanopy=zeros(nCells,1);
+vaporFluxTranspir=zeros(nCells,1);
+vaporFluxSub(hasIntSnow)=vaporMassFlux;
+vaporFluxEvapCanopy(~hasIntSnow)=actEvapCanopy;
+vaporFluxTranspir(~hasIntSnow)=actTranspir;
+<span class="comment">% when energy budget is negative, refreezing process occurs</span>
+refreezeEnergy(bZeroTemp&amp;bNegtiveBudget)=min(error(bZeroTemp&amp;bNegtiveBudget),refreezeCap(bZeroTemp&amp;bNegtiveBudget));
+refreezeEnergy(bNegTemp&amp;bNegtiveBudget)=refreezeCap(bNegTemp&amp;bNegtiveBudget);
+meltEnergy(bZeroTemp&amp;(~bNegtiveBudget))=-min(error(bZeroTemp&amp;(~bNegtiveBudget)),meltCap(bZeroTemp&amp;(~bNegtiveBudget)));
+meltEnergy(bPosTemp&amp;(~bNegtiveBudget))=meltCap(bPosTemp&amp;(~bNegtiveBudget));
+error=error+refreezeEnergy+meltEnergy;
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [error,...
+          vaporFluxSub,vaporFluxEvapCanopy,vaporFluxTranspir,...%vapor fluxes in (mm)
+          refreezeEnergy,meltEnergy]=canopy_energy_balance(Tfoliage,...
+                dt,elevation,...
+                rarc,r0c,RGL,Wim,Wcr,Wwp,...
+                W,intRainOrg,intSnowOrg,Tcanopy,TfoliageOld,RaC,......
+                rainfall,snowfall,netShortOver,longOverIn,longUnderOut,LAI,...
+                wind,airDens,press,eActAir,VPD,Le,...
+                ref_height,displacement,roughness)
+%% writen by Shen, Xinyi, April, 2015
+% contact: xinyi.shen@uconn.edu
+%% Algorithm Description
+% calculate the energy balance of the foliage layer when there is intercepted or packed snow.
+%
+% $$Int_{snow} +Pack_{snow}>0$
+%
+% Energy balance is solved WITHIN the FOLIAGE and the boundary of this medium is ONLY the surrounding air of the canopy.
+%
+% $$CASE1:  \, and \, (Int_{rain}>0\,or\,Int_{snow})>0$
+%
+% $$ T_{foliage} \not= T_{canopy}, T_{foliage} \not= T_{air}, T_{canopy} \not= T_{air},T_{foliage}<=0$$
+%
+% The energy budget MUST be balanced within the foliage medium by adjust $$T_{foliage}$.
+%
+% Only the over portion of radiation is used as input in this circumstance.
+%
+% if there is intercepted snow, no evapotranspiration but sublimation happens.
+%
+% $$CASE 2:Int_{snow}=0,Int_{rain}=0$
+%
+% $$ T_{canopy}=T_{air}=T_{foliage} $$
+%
+% There is no energy balance,refreezing or melting process within this medium.
+%
+% The foliage and snowpack will be treated as one medium to solve the energy balance. 
+%
+% The total radiation is imposed on the foliage medium first to estimate the evapotranspiration. 
+%
+% Then the "error" in the foliage medium will be input to balance of the budget of the snowpack layer.
+%% output arguments
+% error (J/m^2): total energy balance. error=0 indecates the foliage (canopy) layer is balanced
+% vaporFluxSub (mm): vapor flux due to sublimation
+% vaporFluxEvapCanopy (mm): evaporation from intercepted rain
+% vaporFluxTranspir (mm): evaporated vapor due to transpiration
+% refreezeEnergy(J/m^2): released energy due to refreezing
+% meltEnergy(J/m^2): absorbed energy due to intercepted snow melting
+%% input arguments
+% $$T_{foliage}(^oC)$ : temperature of the canopy material
+%
+% dt (s): time interval, $$\Delta t$
+%
+% elevation (m): DEM
+%
+% r_arc $$(sm^{-1})$ : canopy architectural resistance of evaporation
+% 
+% r0c $$(sm^{-1}): r_{0c},$  minimum canopy resistance
+%
+% RGL:(W/m^2): Value of solar radiation below which will be no transpiration (ranges from 30 W/m^2 for trees to ~100 W/m^2 for crops)
+%
+% $$W_{im} (mm)$ : interception capacity,
+%
+% $$W_{cr} (mm):$ critical point of soil moisture
+%
+% $$W_{wp} (mm):$ wilting point of soil moisture
+%
+% intSnowOrg (mm): acccumulated intercepted snow in the vegetation layer
+%
+% $$T_{canopy} (C)$ : temperature of the surrounding air of canopy
+%
+% $$T_{foliageOld} (C)$ : foliage temperature of the last time step
+%
+% rainfall(mm) : newly intercepted rainfall
+% 
+% snowfall(mm) : newly intercepted snowfall
+%
+% netShortOver (W/m^2) : net shortwave radiation of the canopy layer(incoming-reflected)
+%
+% longOverIn (W/m^2): atmospheric incoming long wave radiation
+%
+% longUnderOut (W/m^2): outgoing long wave radiation from underneath surface (snowpack or soil), not needed in this function
+%
+% LAI : leaf area index
+%
+% wind (m/s): wind speed at the near-surface reference height $$U_z$
+%
+% airDens $$(kgm^{-3}): \rho_{a}$, air density
+%
+% press (kPa): atmosphere pressure, $$ P_{a}$ 
+%
+% eActAir (kPa): atmospheric vapor pressure (kPa), accoridng to, it varies with height, $$e_{a}$ 
+%
+% VPD (kPa): vapor pressure deficit, $$\delta e$
+%
+% Le (J/g): latent heats, $$L_{water}$
+%
+% RaC $$(sm^{-1})$: aerodynamic resistance of the canopy
+%
+% ref_height (m): reference height of the wind measurement, z
+%
+% displacement(m): displacement caused by canopy layer (usually 2/3h) $$d_s$
+%
+% roughness(m): vegetation roughness $$z_0$
+global KELVIN STEFAN HUGE_RESIST RHO_W Ls0 JOULESPCAL GRAMSPKG Lf CH_ICE CH_WATER EPS m2mm
+nCells=length(Tfoliage);
+TFoliageInK = Tfoliage + KELVIN;
+%%% Stefam-Boltzmann law for blackbody
+% total energy radiated per unit surface area of a black body across all wavelengths per unit time
+%
+% $j^{\star} = \sigma T^{4}$
+longOverOut = STEFAN * TFoliageInK.^4;
+% note that the energy balance is calculated within the foliage medium
+% whose ONLY boundary is the canopy air. surface flux is incorrectly
+% included by VIC
+% netRad = netShortOver + longOverIn + longUnderOut - 2*longOverOut; %VIC (wrong one)
+netRad = netShortOver + longOverIn - 2*LongOverOut; %CREST (correct one)
+intSnow=intSnowOrg+snowfall;
+hasIntSnow=intSnow>0;
+hasWind=wind>0;
+hasIntSnowAndWind=hasIntSnow&hasWind;
+% Calculate the vapor mass flux between intercepted snow in 
+% the canopy and the surrounding air mass **/
+esSnow = saturatedVaporPressure(Tfoliage(hasIntSnow));
+% we use AR_410 as options.AERO_RESIST_CANSNOW
+% double check the RaC
+RaC(hasIntSnowAndWind)=RaC(hasIntSnowAndWind)./...
+    StabilityCorrection(ref_height(hasIntSnowAndWind), displacement(hasIntSnowAndWind), ...
+           Tfoliage(hasIntSnowAndWind),Tcanopy(hasIntSnowAndWind), ...
+           wind(hasIntSnowAndWind), roughness(hasIntSnowAndWind));
+RaC(hasIntSnow&(~hasWind))=HUGE_RESIST;
+%% sublimation in(mm)
+% $V=f(u_z)(e_z-e_{sur})$
+%
+% where 
+%
+% V(m/s)is the transferred vapor amount(negative value means the flux is from the snow surface to the air)
+%
+% $f(u_z)$ is the wind function mm/kPa/s
+%
+% $f(u_z)=\frac{\rho_a EPS}{P_a \rho_w}10^6/R_{ac}$
+% 
+vaporMassFlux= airDens(hasIntSnow).*(EPS./press(hasIntSnow)).*...
+    (eActAir(hasIntSnow) - esSnow)./RaC(hasIntSnow)/RHO_W; %(A4)
+% sublimation will not happen when the vapor in the air is saturated
+vaporMassFlux((vaporMassFlux<0 & VPD(hasIntSnow)==0))=0;
+vaporMassFlux=min(vaporMassFlux,intSnow(hasSnow)/m2mm);%CREST corrected, vapor flux of sublimation cannot exceed the intercepted snow
+Ls = (Ls0 - 0.07 * Tfoliage(hasIntSnow)) * JOULESPCAL * GRAMSPKG;
+% for grids has no intercepted snow, evapotranspiration happens
+% the surface water is not accounted in the evapotranspiration process when there is snow pack on the ground 
+[AET,actEvapCanopy,~,actTranspir] = canopy_ET(false, dt, elevation(~hasIntSnow), Wim(~hasIntSnow),intRainOrg(~hasIntSnow),... 
+			[], Wcr(~hasIntSnow), Wwp(~hasIntSnow), W(~hasIntSnow), ...
+			rainfall(~hasIntSnow),Tcanopy(~hasIntSnow),...
+            VPD(~hasIntSnow), LAI(~hasIntSnow),netRad(~hasIntSnow), ...
+            netShortOver(~hasIntSnow),RaC(~hasIntSnow),rarc(~hasIntSnow),...
+			r0c(~hasIntSnow),RGL(~hasIntSnow)); 
+%latent heat needed for sublimation
+%latent heat for sublimation in cells with intercepted snow
+latentHeatSub = Ls.* vaporMassFlux * RHO_W;% VIC(have not considered the insufficiency of intercepted snow)
+% latent heat for evapotranspiration in cells without intercepted snow
+latentHeat= Le(~hasIntSnow).*AET/m2mm * RHO_W;
+%% sensible heat flux 
+sensibleHeat = AirDens.* CP_PM * (Tcanopy - Tfoliage) ./ RaC;
+%% advected energy flux
+% advectedEnergy = 4186.8 * Tcanopy.* rainfall/m2mm/dt;%VIC(wrong, rainfall in VIC is total rainfall)
+advectedEnergy = 4186.8 * (Tcanopy - Tfoliage).* rainfall/m2mm/dt;%CREST
+%% heat storage change in the intercepted snow %CREST only
+dTAboveZero=(Tfoliage>0).*Tfoliage-(TfoliageOld>0).*TfoliageOld;
+dTBelowZero=(Tfoliage<0).*Tfoliage-(TfoliageOld<0).*TfoliageOld;
+deltaCC=(intSnowOrg+intRainOrg).*(dTBelowZero*CH_ICE+dTAboveZero*CH_WATER)/dt;
+%% energy budget
+error = sensibleHeat+netRad+advectedEnergy;
+error(~hasIntSnow)=error(~hasIntSnow)+ latentHeat;
+error(hasIntSnow)=error(hasIntSnow)+ latentHeatSub-deltaCC;
+% refreezing & melting Energy processes
+% refreezing and melting capacities, the maximum refreeze Energy that CAN BE used to balance the energy budget
+% refreezeEnergy(~hasIntSnow)=0;
+refreezeCap= (intRainOrg+nIntRain)/m2mm*Lf*RHO_W/dt;
+% the maximum melting energy that CAN BE used to balance the energy budget
+meltCap=-intSnow*Lf*RHO_W/dt;
+% For cells with intercepted snow and the temperature of foliage (intercepted snow) is below zero,
+% all intercepted rain must be frozen
+bNegtiveBudget=error<0;
+bZeroTemp=Tfoliage==0;
+bPosTemp=Tfoliage>0;
+bNegTemp=Troliage<0;
+refreezeEnergy=zeros(nCells,1);
+meltEnergy=zeros(nCells,1);
+vaporFluxSub=zeros(nCells,1);
+vaporFluxEvapCanopy=zeros(nCells,1);
+vaporFluxTranspir=zeros(nCells,1);
+vaporFluxSub(hasIntSnow)=vaporMassFlux;
+vaporFluxEvapCanopy(~hasIntSnow)=actEvapCanopy;
+vaporFluxTranspir(~hasIntSnow)=actTranspir;
+% when energy budget is negative, refreezing process occurs
+refreezeEnergy(bZeroTemp&bNegtiveBudget)=min(error(bZeroTemp&bNegtiveBudget),refreezeCap(bZeroTemp&bNegtiveBudget));
+refreezeEnergy(bNegTemp&bNegtiveBudget)=refreezeCap(bNegTemp&bNegtiveBudget);
+meltEnergy(bZeroTemp&(~bNegtiveBudget))=-min(error(bZeroTemp&(~bNegtiveBudget)),meltCap(bZeroTemp&(~bNegtiveBudget)));
+meltEnergy(bPosTemp&(~bNegtiveBudget))=meltCap(bPosTemp&(~bNegtiveBudget));
+error=error+refreezeEnergy+meltEnergy;
+end
+##### SOURCE END #####
+--></body></html>

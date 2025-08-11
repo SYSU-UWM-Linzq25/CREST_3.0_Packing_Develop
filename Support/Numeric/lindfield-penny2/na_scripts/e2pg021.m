@@ -1,0 +1,13 @@
+x=0.1:.1:5;
+subplot(2,3,1);plot(x,x);title('plot of x');
+xlabel('x'); ylabel('y');
+subplot(2,3,2);plot(x,x.^2);title('plot of x^2');
+xlabel('x'); ylabel('y');
+subplot(2,3,3),plot(x,x.^3);title('plot of x^3');
+xlabel('x'); ylabel('y');
+subplot(2,3,4),plot(x,cos(x));title('plot of cos(x)');
+xlabel('x'); ylabel('y');
+subplot(2,3,5),plot(x,cos(2*x));title('plot of cos(2x)');
+xlabel('x'); ylabel('y');
+subplot(2,3,6),plot(x,cos(3*x));title('plot of cos(3x)');
+xlabel('x'); ylabel('y');

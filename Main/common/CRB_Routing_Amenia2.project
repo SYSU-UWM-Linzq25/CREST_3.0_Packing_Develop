@@ -1,0 +1,107 @@
+################################################################################
+# CREST Project File
+################################################################################
+#Version	=	3.0
+# Operation System###############################################################
+OS              =       "linux"
+###############################################################################
+## MODEL Run Time Information
+################################################################################
+#1. Model Time follows the center based convetion,
+# i.e., the time marker the center of the time step.
+# For example, the start date is 2001123121 and the timeStep is 6h, 
+# which means the accumulation of the first iteration starts at 2001 Dec.,31,18:00 and ends at 2002 Jan. 01, 00:00
+# The same convention applies to all model output variables
+TimeMarkLS	=	h	#y(year);m(month);d(day);h(hour);u(minute);s(second), Forcing must be converted to mm/TimeMark
+#2. All date time of all model variables/files must be defined in the same time zone. UTC is suggested because it is the default for most forcing data
+TimeFormatLS	=	yyyymmddHHMM
+TimeStepLS	=	1
+StartDateLS	=	197901020030
+WarmupDateLS	=	197902282330
+EndDateLS	= 	201809102330
+# Time line of Routing Process######################
+LoadDates	=	""
+TimeMarkRoute	=	h
+TimeFormatRoute	=	yyyymmddHHMM
+TimeStepRoute	=	1
+StartDateRoute	=	197901020030    #197901020030
+WarmupDateRoute	=	197902282330    #197902282330:q:q
+EndDateRoute	=	201809102330
+###############################################################################
+# MODEL Options
+###############################################################################
+RunStyle	=	simu # simu, cali_SCEUA
+TaskType	=	Routing# Routing, LandSurf,ImportForc,Mosaic
+Feedback	=	No 	# routing feeds the LSM back
+hasRiverInterflow	=	No #No: all interflow turns to surface flow in the river
+EventMode	=	None	# AnnualPeak|AllEvents|None
+###############################################################################
+# MODEL Directories
+###############################################################################
+BasicFormat	=	.tif #any gdal supported formats
+UseExtGeographic=	No    # use external geographic files 
+BasicPathExt	=	"G:\hydrosheds\15s\NA\"  # directory of external geographic files
+DEMExt		=	""       # external DEM file name
+FDRExt		=	""  # external FDR file name
+FACExt		=	""  # external FAC file name
+streamExt	=	""  # external stream file name
+BasicPathInt	=	"/shared/stormcenter/Lanxin_HVA/Amenia/part2/01/" # directory of the internal geographic files
+###############################################################################
+ParamFile	=	"/shared/stormcenter/Lanxin_HVA/Amenia/part2/param/Parameters_hourly_naugatuck_opt.txt" # Parameters_hourly_naugatuck_opt.txt,Parameters_delay2.txt
+###############################################################################
+StatePath	=	"/scratch/CREST2/CRB_NLDAS_Bill_Int/states/" # this is a scratch folder
+###############################################################################
+ICSPath		=	"/shared/manoslab/CRB3/ICS/"
+###############################################################################
+ForcingFile	=	"/scratch/CREST2/CRB_NLDAS_Bill_Int/Forcing/forcingNLDASCtl.txt"
+###########################################################################
+ResultInitLoc	=	"/work/CRB_NLDAS_Bill_Int2/" # local directory on the compute node to store intermediate files
+ResultInit	=	"/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/result_init/" # this is a scratch folder
+ResultMosaic	=	"/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/Mosaic/"
+ResultAgger	=	"/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/result_crop/Amenia2/1/"
+ResultVal	=	"/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/result_crop/Amenia2/1/result/ET_Val/"
+ResultEx	=	"/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/result_crop/Amenia2/1/result/export/"
+ResultMasks	=	"/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/result_crop/Amenia2/1/result/NodeMasks/"
+ResultChkPts    =       "/gpfs/scratchfs1/CREST2/CRB_NLDAS_Bill_Int/result/CheckPoints/"
+###############################################################################
+CalibFormat	=	.txt
+CalibPath	=	"/shared/manoslab/CRB3/calib/"
+CalibMode	=	Parallel # Sequential
+###############################################################################
+OBSDateFormat	=	yyyymmddHHMM
+OBSPath		=	"/shared/stormcenter/Lanxin_HVA/Amenia/"
+OBSNoDataValue	=	-9999
+###############################################################################
+#Outlet Information
+###############################################################################
+HasOutlet	=	No
+OutletName	=	01197500
+SitesShpFile	=	Amenia_UConn_Final_20190917.shp
+DBFEName	=	"/shared/stormcenter/simulation/FloodEvents/FE_01184000_corrected.shp"
+###############################################################################
+#Grid Outputs
+###############################################################################
+GOVar_Rain	=	no
+GOVar_Snow      =       no
+GOVar_EPot	=	no
+GOVar_EAct	=	yes
+GOVar_W		=	yes
+GOVar_SM	=	no
+GOVar_SWE	=	yes
+GOVar_IntRain	=	no
+GOVar_IntSnow	=	no
+GOVar_R		=	no
+GOVar_ExcS	=	yes
+GOVar_ExcI	=	yes
+GOVar_RS	=	no
+GOVar_RI	=	no
+GOVar_rainBare  =       yes
+GOVar_actTranspir =     no 
+###############################################################################
+SaveDates	=	""
+SaveDateFormat		=	"yyyymmddHHMM"
+DateOffset		=	000000000000
+#########################################################
+DecompBeforeSrc	=	"gunzip -c "
+DecompBeforeDst =	">"
+OS		=	"linux"

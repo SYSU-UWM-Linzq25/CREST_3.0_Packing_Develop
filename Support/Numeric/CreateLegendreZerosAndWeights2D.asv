@@ -1,0 +1,8 @@
+function [XZeros,YZeros,Weights]=CreateLegendreZerosAndWeights2D(numOfPointsX,numOfPointsY,lx,ux,ly,uy)
+[XZeros,WeightsX]=CreateLegendreZerosAndWeights(numOfPointsX,lx,ux);
+[YZeros,WeightsY]=CreateLegendreZerosAndWeights(numOfPointsY,ly,uy);
+[XZeros,YZeros]=meshgrid(XZeros,YZeros);
+[WeightsX,WeightsY]=meshgrid(WeightsX,WeightsY);
+Weights=WeightsX.*WeightsY;
+XZeros=reshape
+end

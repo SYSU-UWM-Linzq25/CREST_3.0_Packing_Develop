@@ -1,0 +1,9 @@
+function [fileOutVar,subName]=GenerateOutVarNames(dir,date,datefmt,fmtSubDir,splitor,core,nCores)
+dateStr=datestr(date,fmtSubDir);
+subName=datestr(date,datefmt);
+if exist('core','var') && exist('nCores','var') && nCores>1 
+    fileOutVar=[dir,num2str(core),'_',num2str(nCores),splitor,'sta.',dateStr, '.mat'];
+else
+    fileOutVar=[dir,'sta.',dateStr,'.mat'];
+end
+end

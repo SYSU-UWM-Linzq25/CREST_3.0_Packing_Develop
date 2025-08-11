@@ -1,0 +1,71 @@
+function aerodynamic(this,wind,...
+                       height,trunk,wind_atten,dTree,roughTree)
+global Von_K HUGE_RESIST
+K2=Von_K^2;
+%% cells without canopy
+windAdj=nan(this.nCells,1);
+Ra=nan(this.nCells,1);
+%% cells without canopy
+isLogarithmic=~this.isOverstory;
+zh_z0=this.adj_ref_height(isLogarithmic)-this.adj_displacement(isLogarithmic);
+zm_z0=this.ref_height(isLogarithmic)-this.displacement(isLogarithmic);
+windAdj(isLogarithmic) = log(zh_z0./this.roughness(isLogarithmic))./...
+    log(zm_z0./this.roughness(isLogarithmic));
+Ra(isLogarithmic) = log(zh_z0./this.roughness(isLogarithmic)) .*...
+    log(zm_z0./this.roughness(isLogarithmic))/K2;
+%% cells with canopy
+Zw = 1.5 * height - 0.5 * dTree;
+Zt = trunk.*height;
+if any(this.isOverstory)
+    ref_heightVeg=this.ref_height(this.isOverstory);
+    adj_ref_heightVeg=this.adj_ref_height(this.isOverstory);
+    roughVeg=this.roughness(this.isOverstory);
+else
+    ref_heightVeg=[];
+    adj_ref_heightVeg=[];
+    roughVeg=[];
+end
+Uw = log((Zw-dTree)./roughTree)./...
+    log((ref_heightVeg-dTree)./roughTree);
+Uh = Uw - (1-(height-dTree)./...
+    (Zw-dTree))./log((ref_heightVeg-dTree)./roughTree);
+Ut = Uh.* exp(wind_atten.*(trunk - 1));
+% case 1: the wind profile to a height of 2m above the lower boundary is entirely logarithmic
+isLogarithmic1=(Zt > adj_ref_heightVeg);%&this.hasSnow;
+isMixed=(height>adj_ref_heightVeg);% & (~isLogarithmic1)% &this.hasSnow;
+isDwarf=(height<=2);%& this.hasSnow;
+term1=Ut(isLogarithmic1)./log(Zt(isLogarithmic1)./roughVeg(isLogarithmic1));
+term2=log(adj_ref_heightVeg(isLogarithmic1)./roughVeg(isLogarithmic1));
+windAdjCan(isLogarithmic1) = term1.*term2;
+RaCan(isLogarithmic1) = term2./term1/K2;
+% case 2: the wind profile to a height of 2m above the lower boundary 
+   % is part logarithmic and part exponential, but the top of the overstory 
+   % is more than 2 m above the lower boundary
+windAdjCan(isMixed) = Uh(isMixed).* exp(wind_atten(isMixed) .* (adj_ref_heightVeg(isMixed)./height(isMixed) - 1));
+RaCan(isMixed) = log(Zt(isMixed)./roughVeg(isMixed)).* log(Zt(isMixed)./roughVeg(isMixed))./...
+        (K2*Ut(isMixed)) +height(isMixed) .* log((ref_heightVeg(isMixed)-dTree(isMixed))./roughTree(isMixed))./...
+        (wind_atten(isMixed)*K2.*(Zw(isMixed)-dTree(isMixed))) .*...
+        (exp(wind_atten(isMixed).*(1-Zt(isMixed)./height(isMixed))) - exp(wind_atten(isMixed).*(1-adj_ref_heightVeg(isMixed)./height(isMixed))));
+
+windAdjCan(isDwarf) = Uh(isDwarf);
+RaCan(isDwarf) = log(Zt(isDwarf)./roughVeg(isDwarf)) .* log(Zt(isDwarf)./roughVeg(isDwarf))./...
+        (K2*Ut(isDwarf)) +...
+        height(isDwarf) .* log((ref_heightVeg(isDwarf)-dTree(isDwarf))./roughTree(isDwarf)) ./...
+        (wind_atten(isDwarf)*K2.*(Zw(isDwarf)-dTree(isDwarf))) .*...
+        (exp(wind_atten(isDwarf).*(1-Zt(isDwarf)./height(isDwarf))) - 1);
+    
+windAdj(this.isOverstory)=windAdjCan;
+Ra(this.isOverstory)=RaCan;
+%% adjust wind speed
+hasWind=wind>0;
+windAdj=windAdj.*wind;
+Ra(hasWind)=Ra(hasWind)./wind(hasWind);
+Ra(~hasWind)=HUGE_RESIST;
+%% assign values to state variables
+this.RAero=Ra;
+this.UAdj=windAdj;
+% this.RAero(this.hasSnow)=Ra(this.hasSnow);
+% this.RAero(~this.hasSnow)=NaN;
+% this.UAdj(this.hasSnow)=windAdj(this.hasSnow);
+% this.UAdj(~this.hasSnow)=NaN;
+end

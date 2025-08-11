@@ -1,0 +1,42 @@
+function preset(this,lake)
+%% updated in Jan. 7, 2018 to have set lake surface excess water depth to infinity to have a better estimation of lake ET
+% However, ExcS, ExcI and Soil Moisture from lake regions cannot be used
+% for routing since they are unrealistically high
+%% reset all state variables, the simlulate function is responsible to call this function every time
+% input: lake: lake mask
+keywordType={'WU0Type','SS0Type','SI0Type','TDampType'};
+keywordVar={'WU0','SS0','SI0','TDamp'};
+commentSymbol='#';
+global LAKE_DEPTH;
+[dirICS,dirFile,~]=fileparts(this.fileInit);
+% state variables initialized by ICS files
+if ~this.bDistributedSoil
+    sfid=fopen(this.fileInit);
+    [value,bDistr]=StateVariables.readVarInfo(sfid,keywordType{1},keywordVar{1},commentSymbol);
+    this.bDistW0=bDistr;
+    this.pW0=this.Initialize();
+    this.pW0(this.basinMask)=value;
+%     this.W0=this.Initialize();
+
+    [value,bDistr]=StateVariables.readVarInfo(sfid,keywordType{2},keywordVar{2},commentSymbol);
+    this.bDistSS0=bDistr;
+    this.SS0=this.Initialize();
+    this.SS0(this.basinMask)=value;
+
+    [value,bDistr]=StateVariables.readVarInfo(sfid,keywordType{3},keywordVar{3},commentSymbol);
+    this.bDistSI0=bDistr;
+    this.SI0=this.Initialize();
+    this.SI0(this.basinMask)=value;
+%% we recommend to use distributed parameters for TDamp
+    [value,this.bDistTdamp]=StateVariables.readVarInfo(sfid,keywordType{4},keywordVar{4},commentSymbol,...
+        dirFile,[],[],this.geoTrans,obj.spatialRef,obj.basinMask);
+    this.Tdamp=this.Initialize();
+    this.Tdamp(this.basinMask)=value;
+    fclose(sfid);
+else
+    this.LoadModelStates(this.fileInit)
+end
+%% set lake area to have infinite water depth
+this.SS0(lake==1)=LAKE_DEPTH;
+this.pW0(lake==1)=100;
+end

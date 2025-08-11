@@ -1,0 +1,67 @@
+function [P1,P2,dP1,dP2]=Tmat_Wigner0(X,locLast,NG,NMAX,cols)
+N=1:NMAX;
+N1o=reshape(N,1,NMAX,1,1);
+N2o=reshape(N,1,1,NMAX,1);
+clear N
+N1o=repmat(N1o,[1,NMAX,cols]);
+N2o=repmat(N2o,[NMAX,1,cols]);
+N1o=reshape(N1o,1,NMAX*NMAX*cols);
+N2o=reshape(N2o,1,NMAX*NMAX*cols);
+N1i=N1o;
+N2i=N2o;
+P1=zeros(NG,NMAX*NMAX*cols);
+P2=P1;
+dP1=P1;
+dP2=P1;
+%the first order values n=0,m=0
+index1o=N1o==1;
+index2o=N2o==1;
+index1i=N1i>=1;
+index2i=N2i>=1;
+%d000=1
+%d001=X
+P1(:,index1o)=X(:,index1o);
+P2(:,index2o)=X(:,index2o);
+N1i=N1i(index1i);
+N2i=N2i(index2i);
+index1io=N1i==1;
+index2io=N2i==1;
+Xs=sqrt(1-X.^2);
+PT12=X(:,index1i);
+PT22=X(:,index2i);
+PT11=1;
+PT21=1;
+X1=X(:,index1i);
+X2=X(:,index2i);
+PT1=((2*1+1)*X1.*PT12-1*PT11)/2;
+PT2=((2*1+1)*X2.*PT22-1*PT21)/2;
+dP1(:,index1o)=1*(1+1)/(2*1+1)./Xs(:,index1o).*(-PT11+PT1(:,index1io));
+dP2(:,index2o)=1*(1+1)/(2*1+1)./Xs(:,index2o).*(-PT21+PT2(:,index2io));
+for n=2:NMAX    
+    index1o=N1o==n;
+    index2o=N2o==n;  
+    index1i=N1i>=n;
+    index2i=N2i>=n;
+    N1i=N1i(index1i);
+    N2i=N2i(index2i);
+    index1io=N1i==n;
+    index2io=N2i==n;
+    PT11=PT12(:,index1i);      
+    PT21=PT22(:,index2i);
+    PT12=PT1(:,index1i);
+    PT22=PT2(:,index2i);
+    X1=X1(:,index1i);
+    X2=X2(:,index2i);
+    PT1=((2*n+1)*X1.*PT12-n*PT11)/(n+1);%d1(s+1)
+    PT2=((2*n+1)*X2.*PT22-n*PT21)/(n+1);%d2(s+1)
+    P1(:,index1o)=PT12(:,index1io);
+    P2(:,index2o)=PT22(:,index2io);
+    dP1(:,index1o)=n*(n+1)/(2*n+1)./Xs(:,index1o).*(-PT11(:,index1io)+PT1(:,index1io));
+    dP2(:,index2o)=n*(n+1)/(2*n+1)./Xs(:,index2o).*(-PT21(:,index2io)+PT2(:,index2io));
+end
+locLast=logical(locLast);
+P1(~locLast)=0;
+P2(~locLast)=0;
+dP1(~locLast)=0;
+dP2(~locLast)=0;
+end
