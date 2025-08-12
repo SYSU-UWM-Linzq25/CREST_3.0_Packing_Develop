@@ -99,12 +99,14 @@ else
             [forcRas,~,~]=ForcingVariables.ReadProjectedRaster(fileExtLocalFull,bandVar,rows,cols,this.geoTrans,this.spatialRef,...
                 this.decompBeforeSrc,this.decompBeforeDst,dirIntCache,this.pathSplitor,core,this.Interpolation); %Modified by Rehenuma
             %% updated to remove NaN values and values out of the range of the basin
-            validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+            % validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+            validGrids=(~isnan(forcRas))&(forcRas<=varULim)&(forcRas>=varLLim)&this.maskEnt; % Modified by Linzq25, August 11th,2025
             if sum(sum(validGrids))~=sum(sum(this.maskEnt))
     %             if abs(this.dateStart-this.dateCur)<1e-2*this.timeStep && sum(sum(validGrids))~=sum(sum(this.maskEnt))
                 disp(['NaN values appears in ' varName ' file. Interpolating...']);
                 forcRas=FillMissing(forcRas,this.maskEnt,varLLim*varTsRatio,varULim*varTsRatio);
-                validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+                % validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+                validGrids=(~isnan(forcRas))&(forcRas<=varULim)&(forcRas>=varLLim)&this.maskEnt; % Modified by Linzq25, August 11th,2025
             end
             if sum(sum(validGrids))~=sum(sum(this.maskEnt))
     %             if abs(this.dateStart-this.dateCur)<1e-2*this.timeStep && sum(sum(validGrids))~=sum(sum(this.maskEnt))

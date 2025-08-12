@@ -18,7 +18,6 @@ else
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/bin/glnxa64 ;
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/os/glnxa64;
   LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${MCRROOT}/sys/opengl/lib/glnxa64;
-  LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/g/apps/local/components/gdal/2.3.0_mpi/lib
   export LD_LIBRARY_PATH;
   echo LD_LIBRARY_PATH is ${LD_LIBRARY_PATH};
 # Preload glibc_shim in case of RHEL7 variants
