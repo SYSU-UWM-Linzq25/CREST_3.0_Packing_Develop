@@ -106,7 +106,7 @@ else
                 disp(['NaN values appears in ' varName ' file. Interpolating...']);
                 forcRas=FillMissing(forcRas,this.maskEnt,varLLim*varTsRatio,varULim*varTsRatio);
                 % validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
-                validGrids=(~isnan(forcRas))&(forcRas<=varULim)&(forcRas>=varLLim)&this.maskEnt; % Modified by Linzq25, August 11th,2025
+                validGrids=(~isnan(forcRas))&(forcRas<=varULim*varTsRatio)&(forcRas>=varLLim*varTsRatio)&this.maskEnt; % Modified by Linzq25, August 11th,2025
             end
             if sum(sum(validGrids))~=sum(sum(this.maskEnt))
     %             if abs(this.dateStart-this.dateCur)<1e-2*this.timeStep && sum(sum(validGrids))~=sum(sum(this.maskEnt))

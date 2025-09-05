@@ -5,20 +5,18 @@ switch fileSto
     case 'm'
         fmtFile='yyyymm';
     case 'd'
-        if strcmpi(this.forcingVar.fmtSubDir,'yyyymmddHH')
-            fmtFile = 'yyyymmddHH';
-        else
-            fmtFile='yyyymmdd';
-        end
+        fmtFile='yyyymmdd';
+    case 'H'
+        fmtFile = 'yyyymmddHH';
 end
 [fileExport,subName]=StateVariables.GenerateOutVarNames(this.globalVar.resPathAgger,...
-        this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
-        fmtFile,this.forcingVar.pathSplitor);
+    this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
+    fmtFile,this.forcingVar.pathSplitor);
 
 % [fileExport,subName]=StateVariables.GenerateOutVarNames(this.globalVar.resPathAgger,...
 %         this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
-%         this.forcingVar.fmtSubDir,this.forcingVar.pathSplitor);    
-    
+%         this.forcingVar.fmtSubDir,this.forcingVar.pathSplitor);
+
 [~,fileName,ext]=fileparts(fileExport);
 fileLocal=[dirLocMosaicOut,this.forcingVar.pathSplitor,fileName,ext];
 

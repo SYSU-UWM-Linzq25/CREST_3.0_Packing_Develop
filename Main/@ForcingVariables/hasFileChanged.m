@@ -7,15 +7,13 @@ switch fileSto
         [~,monNext,~,~,~,~]=datevec(dateNext);
         changed=monNext~=monCur;
     case 'd'
-        if strcmpi(this.fmtSubDir,'yyyymmddHH')
-            [~,~,~,HourCur,~,~]=datevec(this.dateCur);
-            [~,~,~,HourNex,~,~]=datevec(dateNext);
-            changed=HourCur~=HourNex;
-        else
-            [~,~,dayCur,~,~,~]=datevec(this.dateCur);
-            [~,~,dayNext,~,~,~]=datevec(dateNext);
-            changed=dayCur~=dayNext;
-        end
+        [~,~,dayCur,~,~,~]=datevec(this.dateCur);
+        [~,~,dayNext,~,~,~]=datevec(dateNext);
+        changed=dayCur~=dayNext;
+    case 'H'
+        [~,~,~,HourCur,~,~]=datevec(this.dateCur);
+        [~,~,~,HourNex,~,~]=datevec(dateNext);
+        changed=HourCur~=HourNex;
     otherwise
         [~,monCur,~,~,~,~]=datevec(this.dateCur);
         [~,monNext,~,~,~,~]=datevec(dateNext);
