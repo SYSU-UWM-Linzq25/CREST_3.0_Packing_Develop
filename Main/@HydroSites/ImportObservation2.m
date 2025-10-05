@@ -25,9 +25,9 @@ for i=1:this.nSites
     formatSpec='%s %f';
     switch eventMode
         case 'AllEvents'
-            [sh,eh]=HydroSites.ReadFloodEvents(FEDB,this.STCD{i});
+            [sh,eh]=HydroSites.ReadFloodEvents(FEDB,this.STCD{i},obsFormat);
         case 'AnnualPeak'
-            [~,~,sh,eh]=HydroSites.ReadFloodEvents(FEDB,this.STCD{i});
+            [~,~,sh,eh]=HydroSites.ReadFloodEvents(FEDB,this.STCD{i},obsFormat);
         otherwise
             disp(['complete hydrograph will be used at gauge ' this.STCD{i}, '.']);
     end

@@ -12,4 +12,5 @@ this.intRain=this.Initialize();
 this.intSnow=this.Initialize();
 this.SWE=this.Initialize();% snow water equivalence of the snow pack
 this.W0=this.Initialize(nLayers);
+this.SM=this.Initialize();
 end

@@ -96,10 +96,7 @@ if this.forcingVar.dateStart-dateLastSave<=maxRetro
     %% load the last check point point
     this.forcingVar.dateStart=ForcingVariables.addDatenum(dateLastSave,this.forcingVar.timeStep);% updated set the start time to the check point + 1 time step
     disp(['checkPoint loaded on ' datestr(dateLastSave),'.']);
-    this.forcingVar.ioLocker.request();
-    this.forcingVar.ioLocker.checkPermission();
     S=load(fileChkPt);
-    this.forcingVar.ioLocker.release();
     this.soilSurf=S.soilSurf;
     this.snowpack=S.snowpack;
     this.canopy=S.canopy;

@@ -37,11 +37,27 @@ while(~bEnd)
     if ~strcmpi(mode,'calib')
         disp(datestr(this.forcingVar.dateCur,'yyyy/mm/dd:HH:MM'))
     end
+    time_start = tic; % Start timer
     this.LoadDirectRunoff();
+    time_step = toc(time_start); % Stop timer and get elapsed time
+    disp(['LoadDirectRunoff ', num2str(time_step), ' seconds']); % Annotation of the computing time
+    time_start = tic; % Start timer
     this.WaterBudgetUpdate();
+    time_step = toc(time_start); % Stop timer and get elapsed time
+    disp(['WaterBudgetUpdate ', num2str(time_step), ' seconds']); % Annotation of the computing time
+    time_start = tic; % Start timer
     this.StateVarUpdate();
+    time_step = toc(time_start); % Stop timer and get elapsed time
+    disp(['StateVarUpdate ', num2str(time_step), ' seconds']); % Annotation of the computing time
+    time_start = tic; % Start timer
     this.DownstreamRoute();
+    time_step = toc(time_start); % Stop timer and get elapsed time
+    disp(['DownstreamRoute ', num2str(time_step), ' seconds']); % Annotation of the computing time
+    time_start = tic; % Start timer
     this.stateVar.CalculateOutletData(timeOfStep,strcmpi(mode,'calib'),this.basicVar.masks);
+    time_step = toc(time_start); % Stop timer and get elapsed time
+    disp(['CalculateOutletData ', num2str(time_step), ' seconds']); % Annotation of the computing time
+    time_start = tic; % Start timer
     if ~strcmpi(mode,'calib')
         %% save runoff images
         if this.globalVar.output_runoff
@@ -59,6 +75,8 @@ while(~bEnd)
             end
         end
     end
+    time_step = toc(time_start); % Stop timer and get elapsed time
+    disp(['OutputVar and SaveModelStates ', num2str(time_step), ' seconds']); % Annotation of the computing time
     %% move to the next time step
     timeOfStep=timeOfStep+1;
     bEnd=~this.forcingVar.MoveNext(mode,this.globalVar.taskType);
@@ -97,11 +115,8 @@ end
 catch ME
     NSCE=NaN;
     tElapse=-9999;
-    excFile=[this.globalVar.resPathEx,'err.txt'];
-    fid=fopen(excFile);
-    msgText=ME.getReport();
-    fprintf(fid,'%s\n',msgText);
-    fprintf(fid,'%f',x0);
-    fclose(fid);
+    errorMessage = sprintf('Error in function %s() at line %d.\n\nError Message:\n%s', ...
+    ME.stack(1).name, ME.stack(1).line, ME.message);
+    fprintf(1, '%s\n', errorMessage);
 end
 end

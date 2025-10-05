@@ -31,12 +31,8 @@ switch globalPar.taskType
 %         [comFolder,~,~]=fileparts(pathInt);
         comFolder=fileparts(globalPar.forcingCtl);
 %         fclose(ffileID);
-    case 'DeepHydro_regrid'                       %Added case 'DeepHydro_regrid', modified by Rehenuma
-%         ffileID=fopen(globalPar.forcingCtl);
-%         pathInt=ForcingVariables.ReadAKeyword(ffileID,'PrecPathInt','#');
-%         [comFolder,~,~]=fileparts(pathInt);
+    case 'DeepHydro_regrid'
         comFolder=fileparts(globalPar.forcingCtl);
-%         fclose(ffileID);
 end
 comFolder=[comFolder,pathSplitor,'com',pathSplitor];
 if exist(comFolder,'dir')~=7

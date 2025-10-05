@@ -25,5 +25,6 @@ if ~strcmpi(taskType,'Routing')
 %     this.CCSurf=this.Initialize();
     this.W0=this.Initialize(nLayers);
     this.hydroSites.reset();
+    this.SM=this.Initialize();
 end
 end

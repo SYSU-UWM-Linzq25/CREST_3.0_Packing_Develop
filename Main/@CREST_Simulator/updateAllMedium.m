@@ -24,9 +24,4 @@ this.soilSurf.evap(this.dt*SECONDS_PER_HOUR,vaporFluxEvapVeg,vaporGrnd,vaporTran
 %% sum up thru rain that reaches the soil surface
 rainBare=this.soilSurf.WThru;
 rainBare(this.soilSurf.hasSnow)=this.snowpack.outflow(this.soilSurf.hasSnow);
-%%
-% 
-% * ITEM1
-% * ITEM2
-% 
 end

@@ -11,14 +11,25 @@ if exist(fileOutVarFinal,'file')==2
         subNameExcS=['excS_',subDate];
         subNameExcI=['excI_',subDate];
         subNameSWE=['SWE_',subDate];
+        subNamerain=['rain_',subDate];
+        subNameSM=['SM_',subDate];
         try
-            S=load(fileOutVarFinal,subNameExcS,subNameExcI,subNameSWE);
+            %S = load(fileOutVarFinal);
+            S=load(fileOutVarFinal,subNameExcS,subNameExcI,subNameSWE,subNamerain,subNameSM);
             this.stateVar.SWE=S.(subNameSWE);
             %% load only the direct runoff in grids with no snow pack
             noSWE=(this.stateVar.SWE<=0);
             this.stateVar.excS=S.(subNameExcS).*noSWE;
         %     eval(cmd);
             this.stateVar.excI=S.(subNameExcI).*noSWE;
+            if this.globalVar.output_SM
+                %S=load(fileOutVarFinal,subNameSM);
+                this.stateVar.SM=S.(subNameSM);
+            end
+            if this.globalVar.output_Rain
+                %S=load(fileOutVarFinal,subNamerain);
+                this.stateVar.rain=S.(subNamerain);
+            end
             bLoadedCur=true;
         catch
             warning(['missing land surface results on ' datestr(this.forcingVar.dateCur,'yyyy-mm-dd HH:MM')]);
@@ -39,8 +50,8 @@ if exist(fileOutVarFinal,'file')==2
     bReadPrev=false;
     datePrev=ForcingVariables.addDatenum(this.forcingVar.dateCur,-del*this.forcingVar.timeStep);
     % do not retrospect if the previous data is before the starting date
-    if datePrev<this.forcingVar.dateStart && (strcmpi(this.globalVar.runStyle,'analysis')~=1)...
-           && (strcmpi(this.globalVar.runStyle,'forecast')~=1)
+    if datePrev<this.forcingVar.dateStart %&& (strcmpi(this.globalVar.runStyle,'analysis')~=1)...
+           % && (strcmpi(this.globalVar.runStyle,'forecast')~=1)
         bReadPrev=true;
     end
     while ~bReadPrev
@@ -63,7 +74,8 @@ if exist(fileOutVarFinal,'file')==2
             subNameExcIPrev=['excI_',subDatePrev];
             subNameSWEPrev=['SWE_',subDatePrev];
             try
-                S=load(fileOutVarPrev,subNameExcSPrev,subNameExcIPrev,subNameSWEPrev);
+                S = load(fileOutVarPrev,subNameExcSPrev,subNameExcIPrev,subNameSWEPrev);
+                %S = load(fileOutVarPrev);
                 SWEPrev=S.(subNameSWEPrev);
                 hasSWEPrev=(SWEPrev>0);
                 this.stateVar.excS=this.stateVar.excS+S.(subNameExcSPrev).*hasSWEPrev;
@@ -83,12 +95,10 @@ if exist(fileOutVarFinal,'file')==2
                 datePrev=ForcingVariables.addDatenum(datePrev,-this.forcingVar.timeStep);
                 disp(['loading ', datestr(datePrev,'yyyy-mm-dd HH:MM')]);                
             end
-        else
-            disp(['missing land surface result on a previous day ', datestr(datePrev,'yyyy-mm-dd HH:MM')]);
-            bReadPrev=true;
         end
     end
 else
     error(['missing land surface result on' datestr(this.forcingVar.dateCur)])
 end
 end
+

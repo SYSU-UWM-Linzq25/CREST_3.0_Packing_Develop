@@ -85,6 +85,13 @@ else
         varListInMem{end+1}='this.PET';
     end
 %/MODIFIED
+    if this.globalVar.output_SM
+        varListInFile{end+1}='SM';
+        sum_w = sum(this.soilSurf.W,2);sum_wm=sum(this.soilSurf.Wm,2);
+        SM_wwm = sum_w./sum_wm;
+        varListInMem{end+1}='SM_wwm';
+    end
+%/MODIFIED
     if this.globalVar.output_Rain
         varListInFile{end+1}='rain';
         varListInMem{end+1}='this.rain';
@@ -125,6 +132,7 @@ else
         varListInMem{end+1}='intSnow';
     end
     
+    tic; % Start timer
     for i=1:length(varListInFile)
         cmd=[varListInFile{i},'_',subName,'=',varListInMem{i},';'];
         eval(cmd)
@@ -134,6 +142,8 @@ else
     varStr(2,:)={['_',subName,' ']};
     varStr=reshape(varStr,1,2*length(varListInFile));
     varStr=[varStr{:}];
+    elapsedTime = toc; % Stop timer and get elapsed time
+    disp(['Assignvalue ', num2str(elapsedTime), ' seconds']); % Annotation of the computing time
     if exist(fileOutVar,'file')==2
 %         S=matfile(fileOutVar,'Writable',true);
 %         for i=1:length(varListInFile)
@@ -146,11 +156,12 @@ else
         % deal with the last file
         if has1stTS
             if (~isempty(this.oldResFile)) && exist('core','var') && exist('nCores','var')
-                this.forcingVar.ioLocker.request();
-                this.forcingVar.ioLocker.checkPermission();
+                tic; % Start timer
                 disp('moving result file from local to external folder');
                 movefile(this.oldResFile,[this.coreDir,this.forcingVar.pathSplitor],'f');
-                this.forcingVar.ioLocker.release();
+                elapsedTime = toc; % Stop timer and get elapsed time
+                disp(['File moved in ', num2str(elapsedTime), ' seconds']); % Annotation of the computing time
+                %this.forcingVar.ioLocker.release();
             end
         else
             disp('the result file of the last time step is not saved because not all time steps are contained');
@@ -167,10 +178,7 @@ else
         elseif strcmpi(fileOutVarPrev,fileOutVar)==1 && strcmpi(this.globalVar.runStyle,'analysis') && exist(fileNameInt,'file')
             disp('Detected existing result file from previous simulation.')
             disp('copying...')
-            this.forcingVar.ioLocker.request();
-            this.forcingVar.ioLocker.checkPermission();
             copyfile(fileNameInt,fileOutVar);
-            this.forcingVar.ioLocker.release();
             cmd=['save ',fileOutVar, ' ', varStr ' -append'];
             has1stTS=true;
         else
@@ -179,6 +187,9 @@ else
         % deal with the first time step in the new(current) file
         this.oldResFile=fileOutVar;
     end
+    tic; % Start timer
     eval(cmd);
+    elapsedTime = toc; % Stop timer and get elapsed time
+    disp(['Maybe a save var ', num2str(elapsedTime), ' seconds']); % Annotation of the computing time
 end
 end

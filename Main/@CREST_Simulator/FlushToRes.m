@@ -6,26 +6,25 @@ switch fileSto
         fmtFile='yyyymm';
     case 'd'
         fmtFile='yyyymmdd';
+    case 'H'
+        fmtFile = 'yyyymmddHH';
 end
 [fileExport,subName]=StateVariables.GenerateOutVarNames(this.globalVar.resPathAgger,...
-        this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
-        fmtFile,this.forcingVar.pathSplitor);
+    this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
+    fmtFile,this.forcingVar.pathSplitor);
 
 % [fileExport,subName]=StateVariables.GenerateOutVarNames(this.globalVar.resPathAgger,...
 %         this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
-%         this.forcingVar.fmtSubDir,this.forcingVar.pathSplitor);    
-    
+%         this.forcingVar.fmtSubDir,this.forcingVar.pathSplitor);
+
 [~,fileName,ext]=fileparts(fileExport);
 fileLocal=[dirLocMosaicOut,this.forcingVar.pathSplitor,fileName,ext];
 
 %% 1) copy the external file to the local folder in case early hours exist
 if exist(fileExport,'file')==2 && exist(fileLocal,'file')~=2
     disp('Existing result file detected')
-    this.forcingVar.ioLocker.request();
-    this.forcingVar.ioLocker.checkPermission();
     disp('Copying the old file to append...')
     copyfile(fileExport,fileLocal);
-    this.forcingVar.ioLocker.release();
 end
 %% end 1)
 %% save a new timestep of variables
@@ -56,4 +55,5 @@ this.stateVar.rainBare(this.stateVar.basinMask)=0;%/MODIFIED
 this.stateVar.actTranspir(this.stateVar.basinMask)=0; %/MODIFIED
 this.stateVar.EPot(this.stateVar.basinMask)=0; %/MODIFIED
 this.stateVar.W0=0;
+this.stateVar.SM(this.stateVar.basinMask)=0;
 end

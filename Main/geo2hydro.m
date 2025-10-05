@@ -12,7 +12,7 @@ curFile = mfilename('fullpath');
 [curDir,~,~]=fileparts(curFile);
 [progDir,~,~]=fileparts(curDir);
 addpath([progDir,'/IO']);
-addpath('/shared/stormcenter/rehenuma/MEX/');
+addpath([progDir,'/MEX']);
 addpath([progDir,'/river_topology']);
 addpath([progDir,'/geomorphology/common']);
 sysBit=mexext;

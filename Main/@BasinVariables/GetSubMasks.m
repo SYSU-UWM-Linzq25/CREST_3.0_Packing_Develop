@@ -11,12 +11,19 @@ end
 % extract basin masks for each site
 mkdir(maskDir);
 for i=1:nOutlets
-    disp(['clipping ', outName{i}]);
-    % maski = extractbasin(obj.FAC,obj.FDR,outRow(i),outCol(i),cellsize,1,1,1);
-    maski = extractbasin_s(obj.FDR,outRow(i),outCol(i));
-    fileMask=[maskDir,outName{i},'_mask.tif'];
-    obj.masks(:,:,i)=logical(maski);
-    maski(~maski)=NaN;
-    WriteRaster(fileMask,maski,obj.geoTrans,obj.spatialRef,GDT_Byte,'GTiff',255);
+    fileMask=[maskDir,'/',outName{i},'_mask.tif'];
+    if exist(fileMask,'file') == 2
+        disp(['reading ', outName{i}]);
+        maski=ReadRaster(fileMask);
+        maski(isnan(maski)) = 0; % Set NaN values to 0
+        maski = logical(maski); % Convert to logical mask
+        obj.masks(:,:,i)=logical(maski);
+    else
+        disp(['clipping ', outName{i}]);
+        maski = extractbasin(obj.FAC,obj.FDR,outRow(i),outCol(i),cellsize,1,1,1);
+        obj.masks(:,:,i)=logical(maski);
+        maski(~maski)=NaN;
+        WriteRaster(fileMask,maski,obj.geoTrans,obj.spatialRef,GDT_Byte,'GTiff',255);
+    end
 end
 end

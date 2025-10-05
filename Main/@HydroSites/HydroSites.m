@@ -42,8 +42,22 @@ classdef HydroSites<handle
         function obj=HydroSites(shapefile,geoTransTar,spatialRefTar,...
                 noObserv,nTimeSteps,startDate,endDate,numOfLoaded,...
                 timeStep,warmupDate,...
-                cDir,griddedInd)
-            [xLoc,yLoc,spatialRef,obj.STCD]=readShapeLoc(shapefile,0);
+                cDir,griddedInd,coreNo,nCores)
+            [xLoc_shp,yLoc_shp,spatialRef,STCD_shp]=readShapeLoc(shapefile,0);
+            % Define the number of points in the shapefile
+            numPoints = numel(xLoc_shp);
+            % Calculate the chunk size for each core
+            chunkSize = floor(numPoints / nCores);
+            % Calculate the remainder points
+            remainder = rem(numPoints, nCores);
+            % Calculate the starting and ending indices for the current worker (coreNo)
+            startIdx = (coreNo - 1) * chunkSize + 1 + min(coreNo - 1, remainder);
+            endIdx = coreNo * chunkSize + min(coreNo, remainder);
+            % Assign the working range for the current worker
+            xLoc = xLoc_shp(startIdx:endIdx);
+            yLoc = yLoc_shp(startIdx:endIdx);
+            obj.STCD = STCD_shp(startIdx:endIdx);
+            % original code
             [XTar,YTar]=ProjTransform(spatialRef,spatialRefTar,xLoc,yLoc);
             [obj.row,obj.col]= Proj2RowCol(geoTransTar, YTar, XTar);  
             obj.nSites=length(obj.STCD);
@@ -126,7 +140,8 @@ classdef HydroSites<handle
         function [xLoc,yLoc,spatialRef]=GetOutlet(shapefile,outletID)
             [xLoc,yLoc,spatialRef]=readShapeLoc(shapefile,0,outletID);
         end
-        [sh,eh,shAP,ehAP]=ReadFloodEvents(FEDB,STCD);% added in Jan, 2016
+        [sh,eh,shAP,ehAP]=ReadFloodEvents(FEDB,STCD,fmt);% added in Jan, 2016
         vpi=maxInd(val);
     end
 end
+

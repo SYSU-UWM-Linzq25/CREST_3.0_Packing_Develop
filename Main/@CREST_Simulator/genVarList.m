@@ -26,6 +26,13 @@ if this.globalVar.output_Rain
         varListInMem{end+1}='this.stateVar.rain';
     end
 end
+if this.globalVar.output_SM
+    varListInFile{end+1}='SM';
+    if strcmpi(this.globalVar.taskType,'Mosaic')
+        varListInMem{end+1}='this.stateVar.SM';
+    end
+end
+
 if this.globalVar.output_Snow
     varListInFile{end+1}='snow';
     if strcmpi(this.globalVar.taskType,'LandSurf')

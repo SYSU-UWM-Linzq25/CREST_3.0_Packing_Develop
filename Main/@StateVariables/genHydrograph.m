@@ -16,17 +16,16 @@ for i=1:this.hydroSites.nSites
     fileNameAnalysis=[resPathAna,staName,'_summary.csv'];
     figName=strcat(resPath,staName,'.png');
     % read the hydrograph
-    C=scanTheLastLines(fileNameAnalysis,fmt,300,',');
-%     fid=fopen(fileNameAnalysis);
-% %     C=textscan(fid,fmt,1,'Delimiter',',');
-% %     dt=C{1};
-% %     dnStartRec=datenum(dt);
-% %     fclose(fid);
-% %     rowStart=int32((dateStart-dnStartRec)/datenum(0,0,0,1,0,0))-36;
-% %     fid=fopen(fileNameAnalysis);
-% %     textscan(fid,fmt,rowStart-1,'Delimiter',',');
-%     C=textscan(fid,fmt,'Delimiter',',');
+    fid=fopen(fileNameAnalysis);
+%     C=textscan(fid,fmt,1,'Delimiter',',');
+%     dt=C{1};
+%     dnStartRec=datenum(dt);
 %     fclose(fid);
+%     rowStart=int32((dateStart-dnStartRec)/datenum(0,0,0,1,0,0))-36;
+%     fid=fopen(fileNameAnalysis);
+%     textscan(fid,fmt,rowStart-1,'Delimiter',',');
+    C=textscan(fid,fmt,'Delimiter',',');
+    fclose(fid);
     dn=datenum(C{1},'yyyy/mm/dd:HH');
     ind=find(dn>=dateStart-1,1,'first');
 %     ind=find(dn>=dateStart-36/24,1,'first');
@@ -53,28 +52,25 @@ for i=1:this.hydroSites.nSites
     datePrev2=dateStart-datenum(0,0,1,0,0,0);
 %    datePrev3=dateStart-datenum(0,0,1,12,0,0);
     fileNamePrev1=strrep(fileNameForecast,datestr(dateStart,'yyyymmddHHMM'),datestr(datePrev1,'yyyymmddHHMM'));
-    fid=fopen(fileNamePrev1);
-    if fid~=-1
-        textscan(fid,fmtHeader,1,'Delimiter',',');
-        C=textscan(fid,fmt,'Delimiter',',');
-        dn=datenum(C{1},'yyyy/mm/dd:HH');
-        Q=C{end-1};
-        Qmax=max(Qmax,max(Q));
-        Qmin=min(Qmin,min(Q));
-        plot(dn,Q,'-m','LineWidth',2);
-    end
     fileNamePrev2=strrep(fileNameForecast,datestr(dateStart,'yyyymmddHHMM'),datestr(datePrev2,'yyyymmddHHMM'));
 %    fileNamePrev3=strrep(fileNameForecast,datestr(dateStart,'yyyymmddHHMM'),datestr(datePrev3,'yyyymmddHHMM'));
+    fid=fopen(fileNamePrev1);
+    textscan(fid,fmtHeader,1,'Delimiter',',');
+    C=textscan(fid,fmt,'Delimiter',',');
+    dn=datenum(C{1},'yyyy/mm/dd:HH');
+    Q=C{end-1};
+    Qmax=max(Qmax,max(Q));
+    Qmin=min(Qmin,min(Q));
+    
+    plot(dn,Q,'-m','LineWidth',2);
     fid=fopen(fileNamePrev2);
-    if fid~=-1
-        textscan(fid,fmtHeader,1,'Delimiter',',');
-        C=textscan(fid,fmt,'Delimiter',',');
-        dn=datenum(C{1},'yyyy/mm/dd:HH');
-        Q=C{end-1};
-        Qmax=max(Qmax,max(Q));
-        Qmin=min(Qmin,min(Q));
-        plot(dn,Q,'-c','LineWidth',1);
-    end
+    textscan(fid,fmtHeader,1,'Delimiter',',');
+    C=textscan(fid,fmt,'Delimiter',',');
+    dn=datenum(C{1},'yyyy/mm/dd:HH');
+    Q=C{end-1};
+    Qmax=max(Qmax,max(Q));
+    Qmin=min(Qmin,min(Q));
+    plot(dn,Q,'-c','LineWidth',1);
 %     fid=fopen(fileNamePrev3);
 %     textscan(fid,fmtHeader,1,'Delimiter',',');
 %     C=textscan(fid,fmt,'Delimiter',',');
@@ -87,21 +83,18 @@ for i=1:this.hydroSites.nSites
     plot(dateStart*ones(1,length(dash))-0.5+0.5/24,dash,'m--');
     plot(dateStart*ones(1,length(dash))-1+0.5/24,dash,'c--');
     %% set legend and axes
-    try
-        xTicks=minDn:datenum(0,0,0,3,0,0):maxDn;
-        set(gca,'Xtick',xTicks);
-        set(gca,'XtickLabel',datestr(xTicks,'yyyy/mm/dd:HH'));
-        ylabel('m^3/s')
-        xticklabel_rotate
-        lgd=legend('Real-Time',['forecast made at',datestr(dateStart,'yyyy/mm/dd HH:MM') ' (F0)'],...
-                           ['forecast made at ' datestr(dateStart-0.5,'yyyy/mm/dd HH:MM') ' (F-12h)'],...
-                           ['forecast made at ' datestr(dateStart-1,'yyyy/mm/dd HH:MM') ' (F-24h)'],...
-                           'Start of F0','Start of F-12h','Start of F-24h',...
-                           'Location','NorthOutside');
-        lgd.FontSize=12;
-        ylim([Qmin,Qmax]);
-    catch
-    end
+    xTicks=minDn:datenum(0,0,0,3,0,0):maxDn;
+    set(gca,'Xtick',xTicks);
+    set(gca,'XtickLabel',datestr(xTicks,'yyyy/mm/dd:HH'));
+    ylabel('m^3/s')
+    xticklabel_rotate
+    lgd=legend('Real-Time',['forecast made at',datestr(dateStart,'yyyy/mm/dd HH:MM') ' (F0)'],...
+                       ['forecast made at ' datestr(dateStart-0.5,'yyyy/mm/dd HH:MM') ' (F-12h)'],...
+                       ['forecast made at ' datestr(dateStart-1,'yyyy/mm/dd HH:MM') ' (F-24h)'],...
+                       'Start of F0','Start of F-12h','Start of F-24h',...
+                       'Location','NorthOutside');
+    lgd.FontSize=12;
+    ylim([Qmin,Qmax]);
     saveas(h,figName);
 end
 end

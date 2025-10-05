@@ -1,7 +1,7 @@
 function [albedo,lastSnow,pack_temp,surfCC,packCC] = ...
          SnowPackRedistribute(lastSnow, swq, depth, oldAlbedo, ...
                               isMelting, snowfall)
-%% Modified by Linzq25 - April,2025
+
 %% Description
 % Computes the cold content (CC) and mass transferring between the surface and pack layer.
 % Initializes albedo of the surface and temperature of the pack.

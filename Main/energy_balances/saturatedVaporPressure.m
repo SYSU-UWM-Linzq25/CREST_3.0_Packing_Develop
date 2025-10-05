@@ -2,6 +2,7 @@ function [svp,svpGrad]=saturatedVaporPressure(T)
 %% calculates the saturated vapour pressure at the given air temperature
 % by Shen, Xinyi, April, 2015
 % contact xinyi.shen@uconn.edu
+%% references
 %% output
 % svp (Pa): saturated vapor pressure 
 % svpGrad (Pa/K): the slope of saturated vapor pressure 

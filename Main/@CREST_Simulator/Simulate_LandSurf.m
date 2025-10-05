@@ -3,12 +3,12 @@ function Simulate_LandSurf(this,coreNo,nCores,x0,keywords)
 %% 1) updated on Feb 27, 2017 by Shen, X.
 % reassign all local directory and progress tasks to IOLocker and IOMonitor
 %% create output directory in the external folder
-if exist(this.globalVar.resPathChkPts,'dir')~=7
-    mkdir(this.globalVar.resPathChkPts);
-end
+mkdir(this.globalVar.resPathChkPts);
 %% 2)
 % mkdir(this.globalVar.resPathChkPts);
 %% end 2)
+
+
 % core splitted subdirectory to store state variables
 stateDir=[this.globalVar.statePath,num2str(coreNo),'_',num2str(nCores)];
 mkdir(stateDir);
@@ -16,21 +16,11 @@ mkdir(stateDir);
 % core splittted subdirectory to store result
 this.coreDir=[this.globalVar.resPathInit,num2str(coreNo),'_',num2str(nCores)];
 coreDirLoc=[this.globalVar.resPathInitLoc,num2str(coreNo),'_',num2str(nCores)];
-if exist(this.coreDir,'dir')~=7
-    mkdir(this.coreDir);
-end
+mkdir(this.coreDir);
 chkDir=[this.globalVar.resPathChkPts,num2str(coreNo),'_',num2str(nCores)];
-if exist(chkDir,'dir')~=7
-    mkdir(chkDir);
-end
-%% clean the local folder
-this.forcingVar.initializeIOCoordinator(coreNo);
-[coreList,isMin]=this.forcingVar.ioLocker.checkThePool();
-if isMin % the core# is the minimal among all local cores, do the cleaning
-    this.forcingVar.ioLocker.cleanLocal(coreList,this.globalVar.resPathInitLoc,[]);
-else % wait the min core to clean the directory and create the working folder
-    this.forcingVar.ioLocker.checkLocStartPerm();
-end
+mkdir(chkDir);
+
+
 disp(['creating ' coreDirLoc]);
 mkdir(coreDirLoc);
 % delete([coreDirLoc,this.forcingVar.pathSplitor,'*.mat']);
@@ -90,7 +80,8 @@ while(~bEnd)
     [~,~,dayCur,hourCur,minCur,secCur]=datevec(this.forcingVar.dateCur);
     switch (this.globalVar.runStyle)
         case 'simu'
-            if dayCur==15 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
+%             if dayCur==15 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
+              if dayCur==10 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
                 this.saveChkPt(coreNo,nCores);
             end
         case 'analysis'
@@ -105,18 +96,13 @@ while(~bEnd)
     timeOfStep=timeOfStep+1;
     bEnd=~this.forcingVar.MoveNext(mode,this.globalVar.taskType,coreNo,nCores);
     %% cell2cell evaulate land surface part
-    if this.stateVar.hydroSites.nGObs>0
-        this.evalLandProcVar(mode,bEnd,coreNo,nCores);
-    end
+    this.evalLandProcVar(mode,bEnd,coreNo,nCores);
 end
 % this.forcingVar.ioLocker.cleanLocal(coreNo,nCores);
 % copy the last result file to the common folder
 if (~isempty(this.oldResFile)) && exist('coreNo','var') && exist('nCores','var')
-    this.forcingVar.ioLocker.request();
-    this.forcingVar.ioLocker.checkPermission();
     movefile(this.oldResFile,[this.coreDir,this.forcingVar.pathSplitor],'f');
     disp('move the last monthly result file to the external folder');
-    this.forcingVar.ioLocker.release();
 end
 t2=cputime;
 tElapse=t2-t1;
@@ -131,12 +117,5 @@ else %calibration mode
     disp ('Bias=N/A');
 end
 
-%% clean the local folders and report finish of the core
-this.forcingVar.ioLocker.reportLocalFinish();
-disp(['core ' num2str(this.forcingVar.ioLocker.coreID) 'exited']);
-if isMin
-    this.forcingVar.ioLocker.dispose(coreList,this.globalVar.resPathInitLoc);
-end
-this.forcingVar.ioLocker.finalize();
 
 end

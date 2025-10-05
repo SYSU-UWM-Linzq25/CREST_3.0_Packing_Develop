@@ -13,6 +13,7 @@ if strcmpi(taskType,'Routing') ||strcmpi(taskType,'Mosaic') || strcmpi(taskType,
 else
     moveOnly=false;
 end
+movenext_starttime = tic; % Start timer
 if (~moveOnly) && res
     this.ReadIntForcing(mode,taskType,core,nCores);
 end
@@ -28,4 +29,6 @@ if ~isempty(this.dateStartCoarse)
         this.nAgger=this.nAgger+1;
     end
 end
+elapsedTime_movenext = toc(movenext_starttime); % Stop timer and get elapsed time
+disp(['Read in forcing (move next) ', num2str(elapsedTime_movenext), ' seconds']); % Annotation of the computing time
 end

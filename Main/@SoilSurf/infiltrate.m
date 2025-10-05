@@ -3,6 +3,8 @@ function infiltrate(this,optInfil,Qd,rainBare,IM)
 %% input
 % optInfil:algorithm option
 % Qd: direct runoff after interception
+%% reference
+% SWAT-2009 ch 2.3.2
 SWExc=Qd;
 switch optInfil
     case 'exponential'

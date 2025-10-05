@@ -165,6 +165,10 @@ while (n_accounted_cells < n_contributing_cells-facOffset)
     cont = 0;
     %Increase distance level
     dist_level = dist_level + 1;
+    if dist_level>n_accounted_cells*4
+        disp('n_accounted_cells not convergence, use actual drainage and jump out!')
+        break
+    end
     for cells = 1:size(drain_group,1)
         new_row = drain_group(cells,1);
         new_col = drain_group(cells,2);

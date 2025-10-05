@@ -39,17 +39,26 @@ if existed
             % directory
             delete([dirIntCache,this.pathSplitor,prefix,'*.mat'])
             % copy the new bunch to the local directory
-            this.ioLocker.request();
-            this.ioLocker.checkPermission();
-            disp(['copying ' nameInt ' to ' nameIntCache]);
-            copyfile(nameInt,nameIntCache);
-            this.ioLocker.release();
+            %this.ioLocker.request();
+            %this.ioLocker.checkPermission();
+            %disp(['copying ' nameInt ' to ' nameIntCache]);
+            %copyfile(nameInt,nameIntCache);
+            %this.ioLocker.release();
         end
-        nameInt=nameIntCache;
+        %nameInt=nameIntCache;
     end
-    load(nameInt,subName);
-    cmd=['this.' varName '=' subName ';'];
-    eval(cmd);
+    %load(nameInt,subName);
+    %cmd=['this.' varName '=' subName ';'];
+    %eval(cmd);
+    startTime = tic;
+    % Assuming nameInt contains the full path to the MAT file
+    matObj = matfile(nameInt);
+    % Load the variable from MAT file
+    variableData = matObj.(subName);
+    % Assign the loaded variable to the specified field in the 'this' structure
+    this.(varName) = variableData;
+    elapsedTime = toc(startTime);
+    fprintf('Time taken to load and assign variable "%s": %.6f seconds\n', subName, elapsedTime);
 else
     if strcmpi(dirIntVar(end),'this.pathSplitor')~=1
         dirInt=fileparts(dirIntVar);
@@ -83,22 +92,21 @@ else
             if exist(fileExtLocalFull,'file')~=2
                 % remove old forcing files from the local folder
                 delete([dirIntCache,this.pathSplitor,nameExt,ext]);
-                this.ioLocker.request();
-                this.ioLocker.checkPermission();
                 disp('copying a forcing file from external to local folder...')
                 copyfile(varNameExt,fileExtLocalFull);
-                this.ioLocker.release();
             end
             % if ForcingVariables.fileExist(varNameExt)
             [forcRas,~,~]=ForcingVariables.ReadProjectedRaster(fileExtLocalFull,bandVar,rows,cols,this.geoTrans,this.spatialRef,...
                 this.decompBeforeSrc,this.decompBeforeDst,dirIntCache,this.pathSplitor,core,this.Interpolation); %Modified by Rehenuma
             %% updated to remove NaN values and values out of the range of the basin
-            validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+            % validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+            validGrids=(~isnan(forcRas))&(forcRas<=varULim)&(forcRas>=varLLim)&this.maskEnt; % Modified by Linzq25, August 11th,2025
             if sum(sum(validGrids))~=sum(sum(this.maskEnt))
     %             if abs(this.dateStart-this.dateCur)<1e-2*this.timeStep && sum(sum(validGrids))~=sum(sum(this.maskEnt))
                 disp(['NaN values appears in ' varName ' file. Interpolating...']);
                 forcRas=FillMissing(forcRas,this.maskEnt,varLLim*varTsRatio,varULim*varTsRatio);
-                validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+                % validGrids=(~isnan(forcRas))&(forcRas<=(varULim-varTsTrans)*varTsRatio)&(forcRas>=(varLLim-varTsTrans)*varTsRatio)&this.maskEnt;
+                validGrids=(~isnan(forcRas))&(forcRas<=varULim*varTsRatio)&(forcRas>=varLLim*varTsRatio)&this.maskEnt; % Modified by Linzq25, August 11th,2025
             end
             if sum(sum(validGrids))~=sum(sum(this.maskEnt))
     %             if abs(this.dateStart-this.dateCur)<1e-2*this.timeStep && sum(sum(validGrids))~=sum(sum(this.maskEnt))
@@ -132,12 +140,10 @@ else
     % if the file to save has been chaged or it is the last date, move the file from cache 
     if fileChanged || ...
         round(dateNext*SECONDS_PER_DAY)>round(this.dateEnd(this.iPeriod)*SECONDS_PER_DAY)
-        this.ioLocker.request();
-        this.ioLocker.checkPermission();
         disp(['moving the monthly/daily ' varName ' to the external folder...' ]);
         movefile(fileIntLocal,nameInt,'f');
-        this.ioLocker.release();
     end
 end
 dateVarSto=dateToRead;
 end
+

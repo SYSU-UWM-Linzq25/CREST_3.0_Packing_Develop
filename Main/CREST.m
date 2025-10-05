@@ -12,7 +12,6 @@ curFile = mfilename('fullpath');
 [curDir,~,~]=fileparts(curFile);
 [progDir,~,~]=fileparts(curDir);
 
-addpath([progDir,'/CREST_Prep']);
 addpath([progDir,'/MEX']);
 addpath([progDir,'/IO']);
 addpath([progDir,'/Numeric']);
@@ -21,12 +20,12 @@ addpath([curDir,'/common']);
 addpath([curDir,'/energy_balances']);
 addpath([progDir,'/optimization_npl']);
 addpath([progDir,'/ThirdPartyM/xticklabel_rotate']);
-sysBit=mexext;
-if strcmpi(sysBit,'mexw64')==1
-    dllDir=[progDir,'\DLL'];
-    setenv('PATH', [getenv('PATH') ';' dllDir]);
-end
-disp('loading GDAL v1.11.0...')
+%sysBit=mexext;
+%if strcmpi(sysBit,'mexw64')==1
+%    dllDir=[progDir,'\DLL'];
+%    setenv('PATH', [getenv('PATH') ';' dllDir]);
+%end
+disp('loading GDAL')
 GDALLoad();
 define_constant();
 model_settings();
@@ -73,17 +72,28 @@ if ~strcmpi(globalPar.taskType,'Routing')
     hydroSites=HydroSites(globalPar.out_shp,basinVar.geoTrans,basinVar.spatialRef,...
                 globalPar.obsNoData,globalPar.nTimeStepsLS,globalPar.startDateLS,globalPar.endDateLS,1,...
                 globalPar.timeStepLS,globalPar.warmupDateLS,...
-                globalPar.calibPath,basinVar.nodeIndRef);
+                globalPar.calibPath,basinVar.nodeIndRef,coreNo,nCores);
 else
     hydroSites=HydroSites(globalPar.out_shp,basinVar.geoTrans,basinVar.spatialRef,...
                 globalPar.obsNoData,globalPar.nTimeStepsRoute,globalPar.startDateRoute,globalPar.endDateRoute,max(1,length(globalPar.startDateRoute)),...
                 globalPar.timeStepRoute,globalPar.warmupDateRoute,...
-                globalPar.calibPath,basinVar.nodeIndRef);
+                globalPar.calibPath,basinVar.nodeIndRef,coreNo,nCores);
     hydroSites.ImportObservation2(globalPar.eventMode,globalPar.obsPath,globalPar.FEDB,globalPar.obsFormat,globalPar.out_STCD);
 end
 if strcmpi(globalPar.taskType,'Routing')
     basinVar.CalSlope(slopeMode,hydroSites.row(hydroSites.indexOutlets),hydroSites.col(hydroSites.indexOutlets));
-    basinVar.GetSubMasks(hydroSites.row,hydroSites.col,hydroSites.STCD,globalPar.resPathNodeMasks);
+    [param_path,~,~]=fileparts(globalPar.paramPath);
+    basinVar.GetSubMasks(hydroSites.row,hydroSites.col,hydroSites.STCD,param_path);
+    % Initialize the total valid mask with false (logical 0)
+    totalValidMask = false(size(basinVar.masks(:,:,1)));
+    % Iterate through each mask
+    for i = 1:hydroSites.nSites
+        % Perform logical OR operation with the cumulative mask
+        totalValidMask = totalValidMask | basinVar.masks(:,:,i);
+    end
+    % Convert the total valid mask to logical
+    totalValidMask = logical(totalValidMask);
+    basinVar.basinMask = basinVar.basinMask & totalValidMask;
 end
 %% initialize model parameters
 modelPar=ModelParameters(globalPar.paramPath,basinVar.basinMask,basinVar.geoTrans,basinVar.spatialRef);
@@ -106,25 +116,25 @@ switch globalPar.taskType
         forcingVar=ForcingVariables(basinVar.basinMask,basinVar.maskEnt,basinVar.geoTrans,basinVar.spatialRef,...
             globalPar.startDateLS,globalPar.endDateLS,globalPar.timeStepLS,globalPar.timeFormatLS,globalPar.timeMarkLS,...
             [],[],[],...
-            globalPar.forcingCtl,...    
+            globalPar.forcingCtl,globalPar.taskType,...    
             globalPar.decompBeforeSrc,globalPar.decompBeforeDst,globalPar.OS,isFore,false);
     case 'LandSurf'
         forcingVar=ForcingVariables(basinVar.basinMask,basinVar.maskEnt,basinVar.geoTrans,basinVar.spatialRef,...
             globalPar.startDateLS,globalPar.endDateLS,globalPar.timeStepLS,globalPar.timeFormatLS,globalPar.timeMarkLS,...
             [],[],[],...
-            globalPar.forcingCtl,...    
+            globalPar.forcingCtl,globalPar.taskType,...    
             globalPar.decompBeforeSrc,globalPar.decompBeforeDst,globalPar.OS,isFore,false);
     case 'Mosaic'
         forcingVar=ForcingVariables(basinVar.basinMask,basinVar.maskEnt,basinVar.geoTrans,basinVar.spatialRef,...
             globalPar.startDateLS,globalPar.endDateLS,globalPar.timeStepLS,globalPar.timeFormatLS,globalPar.timeMarkLS,...
             globalPar.startDateRoute,globalPar.endDateRoute,globalPar.timeStepRoute,...
-            globalPar.forcingCtl,...    
+            globalPar.forcingCtl,globalPar.taskType,...    
             globalPar.decompBeforeSrc,globalPar.decompBeforeDst,globalPar.OS,isFore,false);
     case 'Routing'
         forcingVar=ForcingVariables(basinVar.basinMask,basinVar.maskEnt,basinVar.geoTrans,basinVar.spatialRef,...
             globalPar.startDateRoute,globalPar.endDateRoute,globalPar.timeStepRoute,globalPar.timeFormatRoute,globalPar.timeMarkRoute,...
             [],[],[],...
-            globalPar.forcingCtl,...    
+            globalPar.forcingCtl,globalPar.taskType,...    
             globalPar.decompBeforeSrc,globalPar.decompBeforeDst,globalPar.OS,isFore,true);
 end
 basinVar.maskEnt=[];
@@ -217,8 +227,9 @@ end
 toc
 disp('done!');
 catch ME
-    disp(ME.message);
-    %stateVar.genHydrograph(globalPar.resPathEx,forcingVar.dateStart);
+    errorMessage = sprintf('Error in function %s() at line %d.\n\nError Message:\n%s', ...
+        ME.stack(1).name, ME.stack(1).line, ME.message);
+    fprintf(1, '%s\n', errorMessage);
     try
         forcingVar.ioLocker.finalize('Aborted');
     catch
@@ -226,3 +237,4 @@ catch ME
     end
 end
 end
+

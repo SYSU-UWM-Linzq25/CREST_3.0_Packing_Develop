@@ -13,7 +13,7 @@ function covers=ReadVegLib(libPath,nCover)
  end
  formatSpec=[formatSpec,',%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s'];%wind_h,RGL,rad_atten,wind_atten,Trunk Ratio
  raw=textscan(fid,formatSpec,'Delimiter','/t');
- covers(11)=Cover(11);
+ covers(nCover)=Cover(nCover);
 %              covers=covers';
  iStartAlbedo=6;
  iStartRgh=iStartAlbedo+12;

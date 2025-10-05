@@ -16,7 +16,7 @@ this.basinMask(this.basinMask)=ismember(indRef,this.nodeIndRef);
 this.nodeInd=refMask(this.basinMask);
 mkdir(this.pathNodeMask);
 basinMask=this.basinMask;
-save([this.pathNodeMask,'/nodeMask', num2str(node), '_', num2str(nodeNum),'.mat'],'basinMask');
+save([this.pathNodeMask,'nodeMask', num2str(node), '_', num2str(nodeNum),'.mat'],'basinMask');
 clear basinMask
 this.DEM(~this.basinMask)=NaN;
 this.FDR(~this.basinMask)=NaN;

@@ -15,7 +15,8 @@ classdef StateVariables<RasterVariables
         RS;% surface runoff
         RI;% interflow runoff
         runoff;% total runoff
-        rain% through fall
+        rain;% through fall
+        SM;%calculated from LS W0/WM
         snow;
         rainBare;%/ADD
         actTranspir;%/ADD
@@ -75,6 +76,8 @@ classdef StateVariables<RasterVariables
             this.basinMask=basinMask;
             this.stream=streamMask;
             this.InitStates(nLayers);
+            this.px_excS=zeros(this.hydroSites.nTimeSteps,this.hydroSites.nSites);
+            this.px_excI=zeros(this.hydroSites.nTimeSteps,this.hydroSites.nSites);
             this.px_rain=zeros(this.hydroSites.nTimeSteps,this.hydroSites.nSites);
             this.px_snow=zeros(this.hydroSites.nTimeSteps,this.hydroSites.nSites);
             this.px_SWE=zeros(this.hydroSites.nTimeSteps,this.hydroSites.nSites);
@@ -100,6 +103,7 @@ classdef StateVariables<RasterVariables
         SaveModelStates(this,strDateCur);
         LoadModelStates(this,strDateLoad);
         [NSCE,Bias,CC]=GetSingleObjNSCE(this);
+        genHydrograph(this,resPath,dateStart);
     end
     methods (Static)
         [fileStateTXT,fileStateMat]=GenerateFileNames(dirState);

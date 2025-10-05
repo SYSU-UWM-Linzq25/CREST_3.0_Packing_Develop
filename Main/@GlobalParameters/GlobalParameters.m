@@ -98,6 +98,8 @@ classdef GlobalParameters<handle
 %                strWarmupDateLS=GlobalParameters.readLine(gfileID,'WarmupDateLS',commentSymbol,'string');
 %                strEndDateLS=GlobalParameters.readLine(gfileID,'EndDateLS',commentSymbol,'string');
 %            end
+           
+           
            obj.runStyle=GlobalParameters.readLine(gfileID,'RunStyle',commentSymbol,'string');
            obj.taskType=GlobalParameters.readLine(gfileID,'TaskType',commentSymbol,'string');
            obj.feedback=GlobalParameters.readLine(gfileID,'Feedback',commentSymbol,'boolean');

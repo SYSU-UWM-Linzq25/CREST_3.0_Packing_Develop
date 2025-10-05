@@ -1,5 +1,0 @@
-#!/bin/bash
-#SBATCH -p debug
-#SBATCH -n 6
-#SBATCH -x cn297
-srun -l --multi-prog  cmd_slurm_test.conf

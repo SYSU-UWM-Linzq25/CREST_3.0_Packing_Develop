@@ -2,16 +2,8 @@ function mosaic(this,core,nCores)
 mode='simu';% mosaic will never be called in calibration style
 %% clear the local folder and initialize the IOLocker
 this.forcingVar.initializeIOCoordinator(core);
-[coreList,isMin]=this.forcingVar.ioLocker.checkThePool();
 nCoresLS=this.getNumOfLSCores();
 this.oldResFile=cell(nCoresLS,1);
-% monCur=[];
-if isMin % the core# is the minimal among all local cores, do the cleaning
-    this.forcingVar.ioLocker.cleanLocal(coreList,this.globalVar.resPathInitLoc,...
-        @CREST_Simulator.makeMosaicLocDir,this.globalVar.resPathInitLoc,this.forcingVar.pathSplitor,nCoresLS);
-else % wait the min core to clean the directory and create the working folder
-    this.forcingVar.ioLocker.checkLocStartPerm();
-end
 
 this.forcingVar.isMosaic=true;
 bCont=~this.forcingVar.reset(mode,this.globalVar.taskType,false,core,nCores);
@@ -31,11 +23,8 @@ while bCont
     end
    %% move a mosaiced file from cache to the target folder
     if this.forcingVar.dateCur~=this.forcingVar.dateStart && (changed || (~bCont)) % move the mosaic file from the local folder to the external one
-        this.forcingVar.ioLocker.request();
-        this.forcingVar.ioLocker.checkPermission();
         movefile(fileLocal,fileExport,'f');
         disp(['moved a monthly mosaiced file from ',fileLocal  ' to ', fileExport]);
-        this.forcingVar.ioLocker.release();
     end
 %     monCur=monNext;
 end
@@ -44,11 +33,4 @@ for i=1:nCoresLS
         delete(this.oldResFile{i});
     end
 end
-%% clear unused directories
-this.forcingVar.ioLocker.reportLocalFinish();
-disp(['core ' num2str(this.forcingVar.ioLocker.coreID) 'exited']);
-if isMin
-    this.forcingVar.ioLocker.dispose(coreList,this.globalVar.resPathInitLoc);
-end
-this.forcingVar.ioLocker.finalize();
 end

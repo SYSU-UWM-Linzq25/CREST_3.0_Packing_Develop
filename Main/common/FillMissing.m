@@ -24,6 +24,7 @@ if any(misInd(:))
     Vq=griddata(X,Y,V,Xq,Yq);
 %     Vq=mean(V);
     indInval=sub2ind([rows,cols],Yq,Xq);
+    Vq(isnan(Vq))=mean(Vq,'omitnan');%simple solution for out of convex hull sample, they can not be interpolated
     varMat(indInval)=Vq;
     filledMat(mask)=varMat(mask);
     clear varMat indInval

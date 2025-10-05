@@ -6,4 +6,5 @@ this.SS0=S.iSS0;
 this.SI0=S.iSI0;
 % this.pW0=S.ipW0;
 clear S
+disp('Routing status loaded.')
 end

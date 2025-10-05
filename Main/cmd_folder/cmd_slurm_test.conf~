@@ -1,3 +1,0 @@
-#Task_rank     Executable Argument CRB.project
-0	sh -c 'hostname; matlab -singleCompThread -nojvm -nodesktop -r datestr(2002,1,1);'
-1-5	sh -c 'hostname; matlab -singleCompThread -nojvm -nodesktop -r datestr(2002,1,1);'

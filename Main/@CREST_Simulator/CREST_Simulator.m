@@ -33,6 +33,7 @@ classdef CREST_Simulator<matlab.mixin.Copyable
 %         excS;excI;
         rain; % liquid rainfall (mm/timestep)
         snow; % solid snow fall (mm/timestep)
+        SM;
         shortwave;
         longwave;
         pressure % (Pa) atmospheric pressure
@@ -124,7 +125,7 @@ classdef CREST_Simulator<matlab.mixin.Copyable
                     obj.forcingVar.dateStartFore);
             end
             if strcmpi(obj.globalVar.taskType,'LandSurf')
-                disp(['creating' obj.globalVar.resPathInit '...'])
+                disp(['creating' obj.globalVar.resPathInit,'...'])
                 mkdir(obj.globalVar.resPathInit);
                 mkdir(obj.globalVar.resPathVal);
             end

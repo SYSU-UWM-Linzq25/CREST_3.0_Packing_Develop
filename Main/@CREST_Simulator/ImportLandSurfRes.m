@@ -39,6 +39,7 @@ dirLocMosaicIn=[dirLocMosaic,this.forcingVar.pathSplitor,'in'];
 %     this.stateVar.excS(this.stateVar.basinMask)=0;
 %     this.stateVar.excI(this.stateVar.basinMask)=0;
 %     this.stateVar.W0=0;
+%     this.stateVar.SM(this.stateVar.basinMask)=0;
 % end
 %% mosaic results from different cores
 % save mosaic result
@@ -66,9 +67,14 @@ if this.globalVar.output_Rain
     maskVar='rain';
 %     cmd=[cmd ' rain'];
 end
+if this.globalVar.output_SM
+    SM=nan(size(this.stateVar.basinMask));
+    maskVar='SM';
+%     cmd=[cmd ' SM'];
+end
 if this.globalVar.output_Snow
     snow=nan(size(this.stateVar.basinMask));
-    maskVar='snow';p
+    maskVar='snow';
 %     cmd=[cmd ' snow'];
 end
 if this.globalVar.output_EAct
@@ -124,11 +130,8 @@ for core=1:nCoresLS% mosiac and accumulation to the coarse time step
                 delete(this.oldResFile{core});
 %                 disp(['deleted ', this.oldResFile{core}]); 
             end
-            this.forcingVar.ioLocker.request();
-            this.forcingVar.ioLocker.checkPermission(false);
             copyfile(fileOutVar,nameInt);
             disp(['copied ' fileOutVar,' to ', nameInt]);
-            this.forcingVar.ioLocker.release();
         end
         this.oldResFile{core}=nameInt;
     else
@@ -168,6 +171,10 @@ for core=1:nCoresLS% mosiac and accumulation to the coarse time step
     
     if this.globalVar.output_Rain
         cmd=['rain(maskCore)=S.rain_',subName,'(tileMask);'];
+        eval(cmd)
+    end
+    if this.globalVar.output_SM
+        cmd=['SM(maskCore)=S.SM_',subName,'(tileMask);'];
         eval(cmd)
     end
     if this.globalVar.output_EAct
@@ -241,6 +248,10 @@ end
 if this.globalVar.output_Rain %aggregate
     this.stateVar.rain(this.stateVar.basinMask)=...
         this.stateVar.rain(this.stateVar.basinMask)+rain(this.stateVar.basinMask);
+end
+if this.globalVar.output_SM %aggregate
+    this.stateVar.SM(this.stateVar.basinMask)=...
+        this.stateVar.SM(this.stateVar.basinMask)+SM(this.stateVar.basinMask);
 end
 if this.globalVar.output_rainBare %aggregate
     this.stateVar.rainBare(this.stateVar.basinMask)=...

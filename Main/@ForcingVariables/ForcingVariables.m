@@ -85,7 +85,7 @@ classdef ForcingVariables<RasterVariables
         function this=ForcingVariables(basinMask,maskEnt,geoTransBasic,spatialRefBasic,...%geographic info of the basin
                     dateStart,dateEnd,timeStep,timeFormat,timeMark,...% model time step settings
                     dateStartCoarse,dateEndCoarse,timeStepCoarse,...%coarse time step (routing)
-                    forcingCtl,...% forcing file
+                    forcingCtl,tasktype_in,...% forcing file
                     decompBeforeSrc,decompBeforeDst,OS,...
                     isFore,routeLoaded) % decompression software and OS info
             this=this@RasterVariables(geoTransBasic,spatialRefBasic);
@@ -161,7 +161,8 @@ classdef ForcingVariables<RasterVariables
                        'Prec_LT','Prec_ULim','Prec_LLim',this.dateStartFore);     
             [this.dirCom,~,~]=fileparts(forcingCtl);
 %             this.dirCom=fileparts(this.dirCom);
-            this.dirCom=[this.dirCom,this.pathSplitor,'com',this.pathSplitor];
+            %this.dirCom=[this.dirCom,this.pathSplitor,'com',this.pathSplitor];
+            this.dirCom = [this.dirCom, this.pathSplitor, 'com_', tasktype_in, this.pathSplitor];
             if exist(this.dirCom,'dir')~=7
                 mkdir(this.dirCom);
             end
@@ -304,3 +305,4 @@ classdef ForcingVariables<RasterVariables
         
     end
 end
+
