@@ -1,3 +1,0 @@
-function error=atmo_energybalance(sensibleHeatAtm,sensibleHeatOver,sensibleHeatUnder)
-error=sensibleHeatAtm-(sensibleHeatOver+sensibleHeatUnder);
-end
