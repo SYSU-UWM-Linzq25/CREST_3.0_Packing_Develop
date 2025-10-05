@@ -10,6 +10,10 @@ switch fileSto
         [~,~,dayCur,~,~,~]=datevec(this.dateCur);
         [~,~,dayNext,~,~,~]=datevec(dateNext);
         changed=dayCur~=dayNext;
+    case 'H'
+        [~,~,~,HourCur,~,~]=datevec(this.dateCur);
+        [~,~,~,HourNex,~,~]=datevec(dateNext);
+        changed=HourCur~=HourNex;
     otherwise
         [~,monCur,~,~,~,~]=datevec(this.dateCur);
         [~,monNext,~,~,~,~]=datevec(dateNext);

@@ -1,4 +1,4 @@
-function CREST(globalCtlFile,slopeMode,coreNo,nCores)
+function CREST(globalCtlFile,slopeMode,coreNo,nCores,timescale)
 %% update history 
 % 1) update for operational stability
 disp('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%')
@@ -29,7 +29,14 @@ end
 disp('loading GDAL v1.11.0...')
 GDALLoad();
 define_constant();
-model_settings();
+
+% modify by Linzq25 - Oct 5th,2025
+if isempty(timescale)
+    model_settings(); 
+else
+    model_settings(timescale);
+end
+
 globalPar=GlobalParameters(globalCtlFile);
 % if globalPar.numOfLoaded>0
 %     startDate=globalPar.warmupDate;

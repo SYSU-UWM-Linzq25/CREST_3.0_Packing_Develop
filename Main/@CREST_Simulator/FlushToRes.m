@@ -6,6 +6,8 @@ switch fileSto
         fmtFile='yyyymm';
     case 'd'
         fmtFile='yyyymmdd';
+    case 'H'
+        fmtFile = 'yyyymmddHH';
 end
 [fileExport,subName]=StateVariables.GenerateOutVarNames(this.globalVar.resPathAgger,...
         this.forcingVar.dateLastCoarse,this.globalVar.timeFormatRoute,...
