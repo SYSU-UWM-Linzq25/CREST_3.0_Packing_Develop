@@ -1,0 +1,18 @@
+function OutputVar(this,curDate,fileFormat,subFormat,dirOut)
+[fileRunoff,subName]=StateVariables.GenerateExpVarNames(dirOut,curDate,fileFormat,subFormat);
+runoffMat=zeros(size(this.runoff));
+runoffMat(this.stream)=this.runoff(this.stream);
+if isempty(subFormat)
+    this.SaveRaster(runoffMat,fileRunoff);
+    save(fileRunoff,'runoffMat');
+else
+    if isempty(this.statesR) || strcmpi(this.statesR.Properties.Source,fileRunoff)~=1
+        this.statesR=matfile(fileRunoff,'Writable',true);
+        % output the CS info in the first time
+        this.statesR.geoTrans=this.geoTrans;
+        this.statesR.proj=this.spatialRef;
+    end
+    
+    save(fileRunoff,subName,runoffMat,'-append')=runoffMat;
+end
+end

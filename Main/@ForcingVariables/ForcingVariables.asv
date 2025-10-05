@@ -1,0 +1,312 @@
+%% updated by Shen, X. on Jul. 5 to add the forecast capability
+classdef ForcingVariables<RasterVariables
+    % only GCS forcing files are allowed
+    properties
+    % the unit of forcing variables must be converted to mm/timeMark.
+    % For e.g., for daily data, it is mm/day,for hourly or three hourly data, it is mm/hour
+        maskEnt;
+    %% meteorological variables directly from forcing data
+        shortwave;  % incoming shortwave radiation (W/m^2)
+        longwave;   % incoming long wave radiation (W/m^2)
+        ref_height;    % reference height 10(m)
+        wind;% total wind speed (m/s)
+        prec; % total precipitation (rain+snow) (mm/timeMark)
+        LAI;  % Leaf Area Index
+        humidity;   % humidity 
+        pres; % pressure (Pa)
+        Tair; % air temperature(C)
+        eAct; % actual vapor pressure
+    %% coordinate information
+%         lat;lon;
+%         row;col;% row and col of the basic grids
+        dateStart;
+        dateEnd;
+        timeStep;
+        timeFormat;% model time step
+        fmtSubDir;% sub variable name
+        timeMark;
+        isMosaic;
+        dateStartCoarse;% the start date time of the coarse time line
+        dateEndCoarse;% the end date time of the coarse time line
+        timeStepCoarse;% the time step of the coarse time line
+        dateCurCoarse;% the current date of the coarse time line
+        dateLastCoarse;
+        nAgger;
+        iPeriod;
+        nPeriod;
+        
+        %% variable types
+        typeTair;typeWind;typeHumid;
+        MIN_RAIN_TEMP;
+        MAX_SNOW_TEMP;
+        dirLocal;%local directory for each node where cannot be see from other node
+        Interpolation; %Modified by Rehenuma
+    end
+    properties(SetAccess= private,GetAccess=public)
+        isFore;% whether in forecast or analysis mode
+        ioLocker;dirCom;
+        forceIm;% when importing the forcing data, whether ignore the existing ones.
+        dateCur;% current simulation date
+        %% scale: scaling factor of a given forcing file defined in its own document or the downscaling of time step
+        % fvalue=ffile/scalef
+        tsRatioPrec;tsRatioSW;tsRatioLW;tsRatioTair;tsRatioHU;tsRatioPres,tsRatioWind;tsRatioWindU;tsRatioWindV;tsRatioLAI;
+        tsTransPrec;tsTransSW;tsTransLW;tsTransTair;tsTransHU;tsTransPres,tsTransWind;tsTransWindU;tsTransWindV;tsTransLAI;
+        uLimPrec;uLimSW;uLimLW;uLimTair;uLimHU;uLimPres,uLimWind;uLimWindU;uLimWindV;uLimLAI;
+        dLimPrec;dLimSW;dLimLW;dLimTair;dLimHU;dLimPres,dLimWind;dLimWindU;dLimWindV;dLimLAI;
+        %% dirInt: directory of the internal forcing.mat
+        dirIntPrec;dirIntSW;dirIntLAI;dirIntLW;dirIntTair;dirIntHU;dirIntPres;dirIntWind;dirIntWindU,dirIntWindV;
+        %% begin 2)
+        dirIntPrecAna;dirIntSWAna;dirIntLAIAna;dirIntLWAna;dirIntTairAna;dirIntHUAna;dirIntPresAna;dirIntWindAna;dirIntWindUAna,dirIntWindVAna;
+        %% end 2)
+        %% dirExt: head including directory and file head of a given forcing file
+        dirExtPrec;dirExtSW;dirExtLAI;dirExtLW;dirExtTair;dirExtHU;dirExtPres;dirExtWind;dirExtWindU;dirExtWindV;
+        %% ext: extension(end) of a given forcing file
+        extPrec;extSW;extLAI;extLW;extTair,extHU;extPres;extWind;extWindU;extWindV;
+        bandPrec;bandSW;bandLAI;bandLW;bandTair,bandHU;bandPres;bandWind;bandWindU;bandWindV;
+        %% fmt: the date format of a given forcing e.g., yyyy-mm-dd:HH
+        fmtPrec;fmtSW;fmtLAI;fmtLW;fmtTair;fmtHU;fmtPres;fmtWind;fmtWindU;fmtWindV;
+        %% conv: date convention: Begin|Center|End
+        dateConvPrec;dateConvSW;dateConvLAI,dateConvLW;dateConvTair;dateConvHU;dateConvPres;dateConvWind;dateConvWindU;dateConvWindV;
+%         %% time step of forcings
+%         dPrec;dSW;dLW;dTair;dHU;dPres;dWindU;dWindV;dWind;dLAI;
+        %% meteorologic variables estimated from direct ones
+        air_density;
+        windU;windV;
+    end
+    properties(Access=private)
+        %% start time and interval of forcing data
+        dateIntervalPrec;dateIntervalSW;dateIntervalLW;dateIntervalLAI;dateIntervalTair;dateIntervalHU;dateIntervalPres;dateIntervalWind;dateIntervalWindU;dateIntervalWindV;
+        datePrecSto;dateSWSto;dateLWSto;dateTairSto;dateHUSto;datePresSto;dateWindUSto;dateWindVSto;dateWindSto;dateLAISto;
+%         intervalRain;intervalPET;intervalLAI;% time interval of two neighbor LAI;(9 days usually)
+       %% decompression strings
+        decompBeforeSrc;
+        decompBeforeDst;
+        
+    end
+    methods
+        function this=ForcingVariables(basinMask,maskEnt,geoTransBasic,spatialRefBasic,...%geographic info of the basin
+                    dateStart,dateEnd,timeStep,timeFormat,timeMark,...% model time step settings
+                    dateStartCoarse,dateEndCoarse,timeStepCoarse,...%coarse time step (routing)
+                    forcingCtl,...% forcing file
+                    decompBeforeSrc,decompBeforeDst,OS,...
+                    isFore) % decompression software and OS info
+            this=this@RasterVariables(geoTransBasic,spatialRefBasic);
+%% begin 2)
+            this.isFore=isFore;
+%% end 2)
+            this.isMosaic=false;
+            this.decompBeforeSrc=decompBeforeSrc;
+            this.decompBeforeDst=decompBeforeDst;
+            commentSymbol='#';
+            this.bGCS=IsGeographic(this.spatialRef,this.geoTrans);
+            this.basinMask=basinMask;
+            this.maskEnt=maskEnt;
+            %% MODEL TIME SETTINGS
+            this.timeFormat=timeFormat;
+            this.timeMark=timeMark;
+            
+            this.dateStart=dateStart;
+            this.dateEnd=dateEnd;
+            this.timeStep=timeStep;
+            this.iPeriod=0;
+            this.nPeriod=length(this.dateStart);
+            %% coarse time line
+            
+            this.dateStartCoarse=dateStartCoarse;
+            this.dateEndCoarse=dateEndCoarse;
+            
+            this.timeStepCoarse=timeStepCoarse;
+           %% open forcing control file
+             ffileID=fopen(forcingCtl);
+           
+           %% read variable types
+            % Tair type
+            this.forceIm=ForcingVariables.ReadAKeyword(ffileID,'ForceImport',commentSymbol);
+            if strcmpi(this.forceIm,'yes')
+                this.forceIm=true;
+            else
+                this.forceIm=false;
+            end
+            this.typeTair=ForcingVariables.ReadAKeyword(ffileID,'TAIRType',commentSymbol);
+            this.typeWind=ForcingVariables.ReadAKeyword(ffileID,'WindType',commentSymbol);
+            this.typeHumid=ForcingVariables.ReadAKeyword(ffileID,'HumidityType',commentSymbol);
+            this.MIN_RAIN_TEMP=str2double(ForcingVariables.ReadAKeyword(ffileID,'MinTRain',commentSymbol));
+            this.MAX_SNOW_TEMP=str2double(ForcingVariables.ReadAKeyword(ffileID,'MaxTSnow',commentSymbol));           
+            this.Interpolation=str2double(ForcingVariables.ReadAKeyword(ffileID,'Interpolation',commentSymbol));%Modified by Rehenuma
+            
+            
+           %% file organization of forcing variables
+            this.dirLocal=ForcingVariables.ReadAKeyword(ffileID,'forcPathLoc',commentSymbol);
+            this.fmtSubDir=ForcingVariables.ReadAKeyword(ffileID,'FileDateFormat',commentSymbol);%the format of file
+            
+           if this.isFore
+               varConfig=this.dateStart;
+           else
+               varConfig=[];
+           end
+           %% precipitation settings
+            [this.fmtPrec,this.dateConvPrec,this.dateIntervalPrec,...
+                this.dirExtPrec,this.bandPrec,this.dirIntPrec,this.extPrec,...
+                this.tsRatioPrec,this.tsTransPrec,this.uLimPrec,this.dLimPrec]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'PrecDateFormat','PrecDateConv',...
+                       'PrecDateInterval','PrecPathExt','PrecBand','PrecPathInt','PrecFormat',...
+                       'Prec_LT','Prec_ULim','Prec_LLim',varConfig);     
+            [this.dirCom,~,~]=fileparts(forcingCtl);
+%             this.dirCom=fileparts(this.dirCom);
+            this.dirCom=[this.dirCom,this.pathSplitor,'com',this.pathSplitor];
+            if exist(this.dirCom,'dir')~=7
+                mkdir(this.dirCom);
+            end
+           %% shortwave settings
+            [this.fmtSW,this.dateConvSW,this.dateIntervalSW,...
+                this.dirExtSW,this.bandSW,this.dirIntSW,this.extSW,...
+                this.tsRatioSW,this.tsTransSW,this.uLimSW,this.dLimSW]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'SWDateFormat','SWDateConv',...
+                       'SWDateInterval','SWPathExt','SWBand','SWPathInt','SWFormat',...
+                       'SW_LT','SW_ULim','SW_LLim',varConfig); 
+           %% long wave settings
+            [this.fmtLW,this.dateConvLW,this.dateIntervalLW,...
+                this.dirExtLW,this.bandLW,this.dirIntLW,this.extLW,...
+                this.tsRatioLW,this.tsTransLW,this.uLimLW,this.dLimLW]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'LWDateFormat','LWDateConv',...
+                       'LWDateInterval','LWPathExt','LWBand','LWPathInt','LWFormat',...
+                       'LW_LT','LW_ULim','LW_LLim',varConfig);  
+           %% air temperature settings
+            [this.fmtTair,this.dateConvTair,this.dateIntervalTair,...
+                this.dirExtTair,this.bandTair,this.dirIntTair,this.extTair,...
+                this.tsRatioTair,this.tsTransTair,this.uLimTair,this.dLimTair]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'TAIRDateFormat','TAIRDateConv',...
+                       'TAIRDateInterval','TAIRPathExt','TAIRBand','TAIRPathInt','TAIRFormat',...
+                       'TAIR_LT','TAIR_ULim','TAIR_LLim',varConfig); 
+           %% Humidity settings
+            [this.fmtHU,this.dateConvHU,this.dateIntervalHU,...
+                this.dirExtHU,this.bandHU,this.dirIntHU,this.extHU,...
+                this.tsRatioHU,this.tsTransHU,this.uLimHU,this.dLimHU]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'HUDateFormat','HUDateConv',...
+                       'HUDateInterval','HUPathExt','HUBand','HUPathInt','HUFormat',...
+                       'HU_LT','HU_ULim','HU_LLim',varConfig);
+            %% Pressure settings
+              [this.fmtPres,this.dateConvPres,this.dateIntervalPres,...
+                this.dirExtPres,this.bandPres,this.dirIntPres,this.extPres,...
+                this.tsRatioPres,this.tsTransPres,this.uLimPres,this.dLimPres]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'PRESDateFormat','PRESDateConv',...
+                       'PRESDateInterval','PRESPathExt','PRESBand','PRESPathInt','PRESFormat',...
+                       'PRES_LT','PRES_ULim','PRES_LLim',varConfig);
+            %% LAI settings
+              [this.fmtLAI,this.dateConvLAI,this.dateIntervalLAI,...
+                this.dirExtLAI,this.bandLAI,this.dirIntLAI,this.extLAI,...
+                this.tsRatioLAI,this.tsTransLAI,this.uLimLAI,this.dLimLAI]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                       'LAIDateFormat','LAIDateConv',...
+                       'LAIDateInterval','LAIPathExt','LAIBand','LAIPathInt','LAIFormat',...
+                       'LAI_LT','LAI_ULim','LAI_LLim',[]);
+                   
+              %% Wind settings
+           if strcmpi(this.typeWind,'UV')==1
+                [this.fmtWindU,this.dateConvWindU,this.dateIntervalWindU,...
+                    this.dirExtWindU,this.bandWindU,this.dirIntWindU,this.extWindU,...
+                    this.tsRatioWindU,this.tsTransWindU,this.uLimWindU,this.dLimWindU]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                   'WIND_UDateFormat','WIND_UDateConv',...
+                   'WIND_UDateInterval','WIND_UPathExt','WIND_UBand','WIND_UPathInt','WIND_UFormat',...
+                   'WIND_U_LT','WIND_U_ULim','WIND_U_LLim',varConfig);
+               [this.fmtWindV,this.dateConvWindV,this.dateIntervalWindV,...
+                    this.dirExtWindV,this.bandWindV,this.dirIntWindV,this.extWindV,...
+                    this.tsRatioWindV,this.tsTransWindV,this.uLimWindV,this.dLimWindV]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                   'WIND_VDateFormat','WIND_VDateConv',...
+                   'WIND_VDateInterval','WIND_VPathExt','WIND_VBand','WIND_VPathInt','WIND_VFormat',...
+                   'WIND_V_LT','WIND_V_ULim','WIND_V_LLim',varConfig);
+           elseif strcmpi(this.typeWind,'Total')==1
+               [this.fmtWind,this.dateConvWind,this.dateIntervalWind,...
+                    this.dirExtWind,this.bandWind,this.dirIntWind,this.extWind,...
+                    this.tsRatioWind,this.tsTransWind,this.uLimWind,this.dLimWind]=...
+                ForcingVariables.readConfigForAForcingVar(ffileID,commentSymbol,this.pathSplitor,...
+                   'WIND_DateFormat','WIND_DateConv',...
+                   'WIND_DateInterval','WIND_PathExt','WIND_Band','WIND_PathInt','WIND_Format',...
+                   'WIND_LT','WIND_ULim','WIND_LLim',varConfig);
+           else
+                error('unidentified wind type')
+           end
+%% begin 2)
+           if this.isFore% read the analysis internal path as well to initialize the forcing field
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+               dirIntPrecAna=ForcingVariables.ReadAKeyword(ffileID,'PrecPathIntAna',commentSymbol);
+           end
+%% end 2)
+            fclose(ffileID);
+            this.InitGrids();
+            this.iPeriod=0;
+        end
+        changed=hasFileChanged(this);
+        cleanLocal(this,core,nCores);
+        bEnd=reset(this,mode,taskType,isMoveBack,core,nCores);
+        [res,coarseUpdated]=MoveNext(this,mode,taskType,core,nCores);
+        initializeIOCoordinator(this,core);
+    end
+    methods(Access=private)
+        InitGrids(this);
+        setToFirstCoarse(this,dateStartOrg);
+        succeeded=ReadIntForcing(this,mode,taskType,core,nCore);
+        dateVarSto=ReadAForcVar(this,mode,taskType,...
+    dirIntVar,dateVarSto,intervalVar,varName,fmtVar,dateConvVar,dirExtVar,extVar,bandVar,...
+                varTsRatio,varTsTrans,varULim,varLLim,...
+                core,nCores,dateReset);
+    end
+    methods(Static,Access=public)
+        function fileState=GenerateFileNames(headForcing)
+            fileState=headForcing;
+        end
+        
+        dateToRead=fileDateToUpdate(dateCur,dateSto,dateReset,dateInterval,doy0);
+        forcStart=InitializeStartForcTime(forcStart,forcStep,convForc);
+%% start 2)
+%         forcNameExt=GenerateExtForcingFileName(date,timeStep,fmtForc,convForc,dirForc,extForc,pathSplitor);
+        forcNameExt=GenerateExtForcingFileName(date,timeStep,fmtForc,convForc,dirForc,extForc,pathSplitor,dateStart);
+
+        [forcNameInt,subName]=GenerateIntForcingFileName(dirIntForc,fmtSub,fmtInt,date);
+%         [dateFormat,dateConvention,dateForcInter,...
+%             pathExt,bandExt,pathInt,fmtExt,tsScaling,tsTrans,uLim,dLim]=readConfigForAForcingVar(gfileID,commentSymbol,splitor,...
+%             kwDateFormat,kwDateConvention,...
+%             kwDateInterval,kwPathExt,kwBandExt,kwPathInt,kwFmtExt,...
+%             kwLT,kwULim,kwDLim);
+        [dateFormat,dateConvention,dateForcInter,...
+            pathExt,bandExt,pathInt,fmtExt,tsScaling,tsTrans,uLim,dLim]=readConfigForAForcingVar(gfileID,commentSymbol,splitor,...
+            kwDateFormat,kwDateConvention,...
+            kwDateInterval,kwPathExt,kwBandExt,kwPathInt,kwFmtExt,...
+            kwLT,kwULim,kwDLim,dtStart);
+%% end 2)
+        [dateForcStart,dateForcInter]=ForcingTimePar(strForcStart,strForcInter,fmt);
+        dm=str2datenum(str,fmt);
+        dm=str2datenum2(str,fmt);
+        dm=addDatenum(dn1,dn2);
+%% start 2)
+%         forcNameExt=datenum2str(date,fmtForc,pathSplitor);
+        forcNameExt=datenum2str(date,fmtForc,pathSplitor,date0);
+%% end 2)
+        date=offsetDate(date,timeStep,convForc);
+        date=restoreDate(date,timeStep,convForc);
+%% start 2)
+%         date0=FindFirstForc(dateStart,timeStep,intervalForc,fmtForc,convForc,dirForc,extForc,pathSplitor)
+        date0=FindFirstForc(dateStart,timeStep,intervalForc,fmtForc,convForc,dirForc,extForc,pathSplitor,isForc);  
+%% end 2)
+        [raster,geoTransForc,spatialRefForc]=ReadProjectedRaster(fileName,band,...
+                rowsBasic,colsBasic,geoTransBasic,spatialRefBasic,...
+                decompBeforeSrc,decompAfterSrc,dirInt,pathSplitor,core,interpolationMethod); %Modified by Rehenuma; added the argument interpolationMethod
+        fe=fileExist(fileName);% check the existence of a file including HDF/netCDF
+        
+    end
+end

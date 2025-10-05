@@ -1,0 +1,4 @@
+0: MATLAB is selecting SOFTWARE OPENGL rendering.
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+0: slurmstepd: *** STEP 348083.0 ON cn254 CANCELLED AT 2016-09-19T09:46:50 ***
+slurmstepd: *** JOB 348083 ON cn254 CANCELLED AT 2016-09-19T09:46:50 ***

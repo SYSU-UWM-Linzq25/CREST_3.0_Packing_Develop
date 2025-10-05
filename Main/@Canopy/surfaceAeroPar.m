@@ -1,0 +1,9 @@
+function surfaceAeroPar(this,wind_h)
+this.height=this.displacement*3/2;
+% this.displacement=2/3*this.height;
+this.ref_height=wind_h;
+this.ref_height=this.ref_height+(this.displacement+this.roughness).*...
+    (this.ref_height<this.displacement);
+this.adj_ref_height=this.ref_height;%1.5 * this.height - 0.5 * this.displacement;
+this.adj_displacement=this.displacement;
+end

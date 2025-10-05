@@ -1,0 +1,15 @@
+function InitStates(this)
+excS; % excessive water overland
+        excI; % excessive water underground
+        EAct; % Actual ET
+        RS;% surface runoff
+        RI;% interflow runoff
+        runoff;% total runoff
+        rain% through fall
+        snow;
+        intRain;
+        intSnow;
+        SWE;% snow water equivalence of the snow pack
+        iceSurf;WSurf;CCSurf;
+        icePack;WPack;CCPack;
+end

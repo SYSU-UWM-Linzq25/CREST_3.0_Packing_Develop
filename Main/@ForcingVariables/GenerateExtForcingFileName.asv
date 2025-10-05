@@ -1,0 +1,8 @@
+function forcNameExt=GenerateExtForcingFileName(date,timeStep,fmtForc,convForc,dirForc,extForc,pathSplitor,dateStart)
+%% offset the date number by external convention
+date=ForcingVariables.offsetDate(date,timeStep,convForc);
+%% convert the offset date nubmer to string
+% copy the format to the filename
+forcNameExt=ForcingVariables.datenum2str(date,fmtForc,pathSplitor);
+forcNameExt=[dirForc,forcNameExt,extForc];
+end
