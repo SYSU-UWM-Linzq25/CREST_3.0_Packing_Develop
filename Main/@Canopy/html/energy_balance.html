@@ -1,0 +1,165 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>energy_balance</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-05-25"><meta name="DC.source" content="energy_balance.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">Algorithm Description</a></li><li><a href="#4">output arguments</a></li><li><a href="#5">input arguments</a></li><li><a href="#6">advected energy flux</a></li><li><a href="#7">heat storage change in the intercepted snow %CREST only</a></li><li><a href="#8">energy budget</a></li><li><a href="#9">energy due to phase change</a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> [error,<span class="keyword">...</span><span class="comment">%vapor fluxes in (mm)</span>
+</pre><pre class="codeinput">          energyPhaseChange]=<span class="keyword">...</span>
+energy_balance(this,TfoliageTemp,dt,<span class="keyword">...</span>
+          TcanopyTemp,intRainOrg,intSnowOrg,<span class="keyword">...</span>
+          rainfall,netRad,latentHeat,vaporFluxEvap,vaporFluxSub)
+</pre><h2>Algorithm Description<a name="3"></a></h2><p>calculate the energy balance of the foliage layer where there is intercepted snow. and the energy budget of foliage where there is no intercepted snow.</p><p><img src="energy_balance_eq78857.png" alt="$$Int_{snow} +Pack_{snow}&gt;0$"></p><p>Energy balance is solved WITHIN the FOLIAGE and the boundary of this medium is ONLY the surrounding air of the canopy.</p><p><img src="energy_balance_eq62301.png" alt="$$CASE1:  \, and \, (Int_{rain}&gt;0\,or\,Int_{snow})&gt;0$"></p><p><img src="energy_balance_eq26212.png" alt="$$ T_{foliage} \not= T_{canopy}, T_{foliage} \not= T_{air}, T_{canopy} \not= T_{air},T_{foliage}<=0$$"></p><p>The energy budget MUST be balanced within the foliage medium by adjust <img src="energy_balance_eq46724.png" alt="$$T_{foliage}$">.</p><p>Only the over portion of radiation is used as input in this circumstance.</p><p>if there is intercepted snow, no evapotranspiration but sublimation happens.</p><p><img src="energy_balance_eq35939.png" alt="$$CASE 2:Int_{snow}=0,Int_{rain}=0$"></p><p><img src="energy_balance_eq45327.png" alt="$$ T_{canopyTemp}=T_{air}=T_{foliage} $$"></p><p>There is no energy balance,refreezing or melting process within this medium.</p><p>The foliage and snowpack will be treated as one medium to solve the energy balance.</p><p>The total radiation is imposed on the foliage medium first to estimate the evapotranspiration.</p><p>Then the "error" in the foliage medium will be input to balance of the budget of the snowpack layer.</p><h2>output arguments<a name="4"></a></h2><p>error (W/m^2): total energy balance. error=0 indecates the foliage (canopy) layer is balanced energyPhaseChange(J/m^2/s): released energy due to refreezing(+)/melting(-)</p><h2>input arguments<a name="5"></a></h2><p><img src="energy_balance_eq96025.png" alt="$$T_{foliageTemp}(^oC)$"> : temporary solution of emperature of the canopy material</p><p>dt (s): time interval, <img src="energy_balance_eq00382.png" alt="$$\Delta t$"></p><p><img src="energy_balance_eq71117.png" alt="$$W_{cr} (mm):$"> critical point of soil moisture</p><p><img src="energy_balance_eq33236.png" alt="$$W_{wp} (mm):$"> wilting point of soil moisture</p><p>WSoil (mm): soil moisture</p><p><img src="energy_balance_eq99189.png" alt="$$T_{canopy} (C)$"> : temperature of the surrounding air of canopy</p><p>intSnowOrg(mm): intercepted snow at the last time step</p><p>intRainOrg(mm): intercepted rain at the last time step</p><p>rainfall(mm) : newly intercepted rainfall rather than the total rainfall</p><p>vaporFluxEvap (-mm/s):vapor flux due to evaporation</p><p>vaporFluxSub (-mm/s): vapor flux due to sublimation</p><h2>advected energy flux<a name="6"></a></h2><p>advectedEnergy = 4186.8 * Tcanopy.* rainfall/m2mm/dt;%VIC(wrong, rainfall in VIC is the total rainfall, Absurd error in VIC, 4186 is for depth in mm, 4186e3 should be used) Another ignorance in VIC, the advected energy by snow fall should also be added into the advected Energy</p><pre class="codeinput">advectedEnergy=MixedHeatChange(TcanopyTemp,TfoliageTemp,rainfall+snowfall,this.CH_positive,this.CH_negative)/dt;
+</pre><h2>heat storage change in the intercepted snow %CREST only<a name="7"></a></h2><pre class="codeinput">deltaCC=MixedHeatChange(TfoliageTemp,this.TSurf,intSnowOrg+intRainOrg,this.CH_positive,this.CH_negative)/dt;
+</pre><h2>energy budget<a name="8"></a></h2><pre class="codeinput">error = sensibleHeat+netRad+advectedEnergy+latentHeat-deltaCC;
+</pre><h2>energy due to phase change<a name="9"></a></h2><p>overstory cells without intercepted snow do/can not balance the budget by refreezing or melting process</p><pre class="codeinput">energyPhaseChange(this.hasSnow)=EnergyByPhaseChange(dt,error,<span class="keyword">...</span>
+    TfoliageTemp(this.hasSnow),this.W(this.hasSnow),this.intSnow(this.hasSnow),<span class="keyword">...</span>
+    vaporFluxSub(this.hasSnow),vaporFluxEvap(this.hasSnow));
+energyPhaseChange(~this.hasSnow)=0;
+error(this.hasSnow)=error(this.hasSnow)+energyPhaseChange(this.hasSnow);
+</pre><pre class="codeinput"><span class="keyword">end</span>
+</pre><pre class="codeoutput error">The specified superclass 'RasterVariables' contains a parse error, cannot be found on MATLAB's search path, or is shadowed by another file with the same name.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [error,...%vapor fluxes in (mm)
+          energyPhaseChange]=...
+energy_balance(this,TfoliageTemp,dt,...
+          TcanopyTemp,intRainOrg,intSnowOrg,...
+          rainfall,netRad,latentHeat,vaporFluxEvap,vaporFluxSub)
+%% Algorithm Description
+% calculate the energy balance of the foliage layer where there is intercepted snow.
+% and the energy budget of foliage where there is no intercepted snow.
+%
+% $$Int_{snow} +Pack_{snow}>0$
+%
+% Energy balance is solved WITHIN the FOLIAGE and the boundary of this medium is ONLY the surrounding air of the canopy.
+%
+% $$CASE1:  \, and \, (Int_{rain}>0\,or\,Int_{snow})>0$
+%
+% $$ T_{foliage} \not= T_{canopy}, T_{foliage} \not= T_{air}, T_{canopy} \not= T_{air},T_{foliage}<=0$$
+%
+% The energy budget MUST be balanced within the foliage medium by adjust $$T_{foliage}$.
+%
+% Only the over portion of radiation is used as input in this circumstance.
+%
+% if there is intercepted snow, no evapotranspiration but sublimation happens.
+%
+% $$CASE 2:Int_{snow}=0,Int_{rain}=0$
+%
+% $$ T_{canopyTemp}=T_{air}=T_{foliage} $$
+%
+% There is no energy balance,refreezing or melting process within this medium.
+%
+% The foliage and snowpack will be treated as one medium to solve the energy balance. 
+%
+% The total radiation is imposed on the foliage medium first to estimate the evapotranspiration. 
+%
+% Then the "error" in the foliage medium will be input to balance of the budget of the snowpack layer.
+%% output arguments
+% error (W/m^2): total energy balance. error=0 indecates the foliage (canopy) layer is balanced
+% energyPhaseChange(J/m^2/s): released energy due to refreezing(+)/melting(-)
+%% input arguments
+% $$T_{foliageTemp}(^oC)$ : temporary solution of emperature of the canopy material
+%
+% dt (s): time interval, $$\Delta t$
+%
+% $$W_{cr} (mm):$ critical point of soil moisture
+%
+% $$W_{wp} (mm):$ wilting point of soil moisture
+%
+% WSoil (mm): soil moisture
+%
+% $$T_{canopy} (C)$ : temperature of the surrounding air of canopy
+%
+% intSnowOrg(mm): intercepted snow at the last time step
+%
+% intRainOrg(mm): intercepted rain at the last time step
+%
+% rainfall(mm) : newly intercepted rainfall rather than the total rainfall
+%
+% vaporFluxEvap (-mm/s):vapor flux due to evaporation
+%
+% vaporFluxSub (-mm/s): vapor flux due to sublimation
+%
+%% advected energy flux
+% advectedEnergy = 4186.8 * Tcanopy.* rainfall/m2mm/dt;%VIC(wrong, rainfall in VIC is the total rainfall, 
+% Absurd error in VIC, 4186 is for depth in mm, 4186e3 should be used)
+% Another ignorance in VIC, the advected energy by snow fall should also be added into the advected Energy
+advectedEnergy=MixedHeatChange(TcanopyTemp,TfoliageTemp,rainfall+snowfall,this.CH_positive,this.CH_negative)/dt;
+%% heat storage change in the intercepted snow %CREST only
+deltaCC=MixedHeatChange(TfoliageTemp,this.TSurf,intSnowOrg+intRainOrg,this.CH_positive,this.CH_negative)/dt;
+%% energy budget
+error = sensibleHeat+netRad+advectedEnergy+latentHeat-deltaCC;
+%% energy due to phase change
+% overstory cells without intercepted snow do/can not balance the
+% budget by refreezing or melting process
+energyPhaseChange(this.hasSnow)=EnergyByPhaseChange(dt,error,...
+    TfoliageTemp(this.hasSnow),this.W(this.hasSnow),this.intSnow(this.hasSnow),...
+    vaporFluxSub(this.hasSnow),vaporFluxEvap(this.hasSnow));
+energyPhaseChange(~this.hasSnow)=0;
+error(this.hasSnow)=error(this.hasSnow)+energyPhaseChange(this.hasSnow);
+end
+##### SOURCE END #####
+--></body></html>

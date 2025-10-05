@@ -1,0 +1,242 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>canopy_ET</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2015-04-18"><meta name="DC.source" content="canopy_ET.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#3">compute the actual canopy evaportranspiration</a></li><li><a href="#4">output ET (mm): the actual Evaporatranspiration during one time step</a></li><li><a href="#5">input</a></li><li><a href="#6">compute vegetation free and soil moisture deficit free resistance as input of Penman equation</a></li><li><a href="#7">calculate PET using the Penman Monteith Equation</a></li><li><a href="#8"><img src="canopy_ET_eq18761.png" alt="$$ E_p(0), E_p(r_c)$"></a></li><li><a href="#9"><img src="canopy_ET_eq98422.png" alt="$$ E^*_c=\frac{W_i}{W_{im}}E_p(0)$"></a></li><li><a href="#10"><img src="canopy_ET_eq16566.png" alt="$$ E_p(0)\Delta t$"></a></li><li><a href="#11"><img src="canopy_ET_eq63563.png" alt="$$ f_1= min(1,\frac{W_i+P\Delta t}{W_{im}})$"></a></li><li><a href="#12"><img src="canopy_ET_eq91159.png" alt="$$ f_1=min(1,\frac{W_i}{W_{im}})$"></a></li></ul></div><pre class="codeinput"><span class="keyword">function</span> [ET,actEvapCanopy,actEvapGrnd,actTranspir]=canopy_ET(feedback,dt,elevation,<span class="keyword">...</span>
+</pre><pre class="codeinput">    Wim,Wi,SSO,Wcr,Wwp,W,<span class="keyword">...</span><span class="comment">% state variables</span>
+    rainfall,Tair,VPD,LAI,netRad,netShort,ra,<span class="keyword">...</span><span class="comment">% forcing</span>
+    rarc,r0c,RGL)<span class="comment">% vegetation type specific</span>
+</pre><h2>compute the actual canopy evaportranspiration<a name="3"></a></h2><h2>output ET (mm): the actual Evaporatranspiration during one time step<a name="4"></a></h2><h2>input<a name="5"></a></h2><p>feedback (boolean) : turn on(1)|off(0) the feedback mechanism</p><p>dt (s): time step</p><p>elevation (m): DEM</p><p><img src="canopy_ET_eq20968.png" alt="$$ W_{im} $$"> : interception capacity,</p><p>Wi (mm): intecepted rainfall at the LAST time step, <img src="canopy_ET_eq38735.png" alt="$$ W_i $$"></p><p>SSO (mm): surface water storage, S_{sto}+\Sigma R_{in}</p><p>Wcr (mm): critical point of soil moisture</p><p>Wwp (mm): wilting point of soil moisture</p><p>rainfall (mm): rainfall of the current time step, P</p><p>Tair (C): air temperature</p><p>VPD (Pa): vapor pressure deficit, <img src="canopy_ET_eq98457.png" alt="$$ \delta e $$"></p><p>LAI: leaf area index</p><p>netRad,: <img src="canopy_ET_eq79579.png" alt="$$ (Wm^{-2}): $$"> Net irradiance, the external source of energy flux, <img src="canopy_ET_eq48197.png" alt="$$ R_n-G $$"></p><p>netShort <img src="canopy_ET_eq28399.png" alt="$$(Ws^{-2})$"> : Net shortwave irradiance</p><p><img src="canopy_ET_eq05000.png" alt="$$ r_{a}(sm^{-1}): $$"> aerodynamic resistance calculated and corrected by wind speed</p><p><img src="canopy_ET_eq61928.png" alt="$$ r_{arc}(sm^{-1}): $$"> canopy architectural resistance of evaporation</p><p><img src="canopy_ET_eq61799.png" alt="$$ r_{0c}: (sm^{-1}) $$"> minimum canopy resistance</p><p>RGL (W/m^2): Value of solar radiation below which will be no transpiration (ranges from</p><pre class="codeinput">    <span class="comment">%~30 W/m^2 for trees to ~100 W/m^2 for crops)</span>
+</pre><h2>compute vegetation free and soil moisture deficit free resistance as input of Penman equation<a name="6"></a></h2><p>rc = calc_rc(0, netShort, RGL,Tair, vpd,LAI, 1, false);</p><h2>calculate PET using the Penman Monteith Equation<a name="7"></a></h2><pre class="codeinput">gsm_inv(W&gt;Wcr)=1;
+gsm_inv(W&lt;Wwp)=0;
+indexLinear=(W&lt;=Wcr)&amp;(W&gt;=Wwp);
+indexZeroIntCap=Wim==0;
+indexZeroLAI=LAI==0;
+gsm_inv(indexLinear)=(W(indexLinear) - Wwp(indexLinear))./(Wcr(indexLinear) - Wwp(indexLinear));
+rc=calc_rc(r0c,RGL,netShort,Tair,VPD,LAI,gsm_inv,bRefCrop);
+</pre><h2><img src="canopy_ET_eq18761.png" alt="$$ E_p(0), E_p(r_c)$"><a name="8"></a></h2><pre class="codeinput">[rPotEvapCanopy,~,rActEvap]=Penman(elevation,Tair,netRad,VPD,ra,rc,rarc);
+</pre><h2><img src="canopy_ET_eq98422.png" alt="$$ E^*_c=\frac{W_i}{W_{im}}E_p(0)$"><a name="9"></a></h2><pre class="codeinput">evapCanopy=(Wi./Wim).^(2/3).*rPotEvapCanopy*dt;
+evapCanopy(indexZeroLAI|indexZeroIntCap)=0;
+</pre><h2><img src="canopy_ET_eq16566.png" alt="$$ E_p(0)\Delta t$"><a name="10"></a></h2><pre class="codeinput">evapGrndMax=rPotEvapCanopy*dt;
+<span class="comment">%VIC's implementation. CREST needs to take the overland storage into</span>
+<span class="comment">%consideration</span>
+<span class="comment">% time fraction of the evaporation.</span>
+<span class="keyword">if</span> dt&gt;=SECONDS_PER_DAY
+</pre><h2><img src="canopy_ET_eq63563.png" alt="$$ f_1= min(1,\frac{W_i+P\Delta t}{W_{im}})$"><a name="11"></a></h2><pre class="codeinput">    f1 = min(1,(Wi + rainfall)./evapCanopy);
+<span class="keyword">else</span>
+</pre><h2><img src="canopy_ET_eq91159.png" alt="$$ f_1=min(1,\frac{W_i}{W_{im}})$"><a name="12"></a></h2><pre class="codeinput">    f1=min(1,Wi./evapCanopy);
+<span class="keyword">end</span>
+f1(indexZeroLAI)=0;
+canopyEnergyPart=(Wi./Wim).^(2/3);
+canopyEnergyPart(indexZeroIntCap)=0;
+<span class="keyword">if</span> ~feedback <span class="comment">%% routed water goes directly to channels and  does not feedback the runoff-genaration module</span>
+    transFrac = 1-f1.*canopyEnergyPart;
+<span class="keyword">else</span> <span class="comment">% CREST update, routed surface water must feedback to the runoff-generatin module</span>
+</pre><p><img src="canopy_ET_eq22329.png" alt="$$ ET=\Delta t \cdot \{ \matrix{f_1E^*_c+ \{[1-(\frac{W_i}{W_{im}})^{2/3}]f_1+f_3\}E_p(0)+(1-f_1-f_3)E_p(r_c)\cr&#xA;          f_1E^*_c+f_2[1-(\frac{W_i}{W_{im}})^{2/3}]E_p(0)+[(f_2-f_1)(\frac{W_i}{W_{im}})^{2/3}+1-f_2]E_p(r_c)\cr} $$"></p><p>where</p><p><img src="canopy_ET_eq91983.png" alt="$$ f_2=min(1,\frac{S_{sto}+\Sigma R_{in}}{E_g \Delta t}) $$"></p><p><img src="canopy_ET_eq88019.png" alt="$$ f_3=min(1-f_1,\frac{S_{sto}+\Sigma R_{in}-f_1E_g}{E_p(0) \Delta t}) $$"></p><p><img src="canopy_ET_eq68361.png" alt="$$ E_g= [1-(\frac{W_i}{W_{im}})^{2/3}]E_p(0)$$"></p><pre class="codeinput">    evapGrnd=potEvapCanopy.*(1-canopyEnergyPart)*dt;
+    f2=min(1,SSO./evapGrnd);
+    index1=f2&gt;f1;
+    f3=min(1-f1(index1),(SSO(index1)-f1(index1).*evapGrnd(index1))./(evapGrndMax(index1)));
+    surfFrac=(1-canopyEnergyPart(index1)).*f1(index1)+f3;
+    surfFrac(index1)=surfFrac(index1).*f1(index1)+f3;
+    surfFrac(~index1)=surfFrac(~index1).*f2(~index1);
+    transFrac(index1)=1-f1(index1)-f3;
+    transFrac(~index1)=(f2(~index)-f1(~index1)).*canopyEnergyPart(~index1)+1-f2(~index1);
+</pre><pre class="codeinput"><span class="keyword">end</span>
+actEvapCanopy=f1.*evapCanopy;
+<span class="keyword">if</span> feedback
+    actEvapGrnd=surfFrac.*evapGrndMax;
+<span class="comment">%     ET=actEvapCanopy+surfFrac.*evapGrndMax;</span>
+<span class="keyword">else</span>
+    actEvapGrnd=zeros(length(Tair));
+actTranspir=transFrac.*rActEvap*dt;
+indexOverTranspir=(W-actTranspir)&lt;Wwp;<span class="comment">% prevent the transpirate soil moisture below the wilting point</span>
+actTranspir(indexOverTranspir)=W(indexOverTranspir)-Wwp(indexOverTranspir);
+ET=actEvapCanopy+actEvapGrnd+actTranspir;
+<span class="keyword">end</span>
+</pre><pre class="codeoutput error">Error using canopy_ET (line 56)
+Not enough input arguments.
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+function [ET,actEvapCanopy,actEvapGrnd,actTranspir]=canopy_ET(feedback,dt,elevation,...
+    Wim,Wi,SSO,Wcr,Wwp,W,...% state variables
+    rainfall,Tair,VPD,LAI,netRad,netShort,ra,...% forcing
+    rarc,r0c,RGL)% vegetation type specific
+%% compute the actual canopy evaportranspiration
+%% output ET (mm): the actual Evaporatranspiration during one time step
+%% input 
+% feedback (boolean) : turn on(1)|off(0) the feedback mechanism
+%
+% dt (s): time step
+%
+% elevation (m): DEM
+%
+% $$ W_{im} $$
+% : interception capacity, 
+%
+% Wi (mm): intecepted rainfall at the LAST time step, 
+% $$ W_i $$
+%
+% SSO (mm): surface water storage, S_{sto}+\Sigma R_{in}
+%
+% Wcr (mm): critical point of soil moisture
+%
+% Wwp (mm): wilting point of soil moisture
+%
+% rainfall (mm): rainfall of the current time step, P
+%
+% Tair (C): air temperature
+%
+% VPD (Pa): vapor pressure deficit,
+% $$ \delta e $$
+%
+% LAI: leaf area index
+%
+% netRad,:
+% $$ (Wm^{-2}): $$ 
+% Net irradiance, the external source of energy flux,
+% $$ R_n-G $$
+%
+% netShort $$(Ws^{-2})$ : Net shortwave irradiance
+%
+% $$ r_{a}(sm^{-1}): $$
+% aerodynamic resistance calculated and corrected by wind speed
+%
+% $$ r_{arc}(sm^{-1}): $$
+% canopy architectural resistance of evaporation
+%
+% $$ r_{0c}: (sm^{-1}) $$
+% minimum canopy resistance
+%
+% RGL (W/m^2): Value of solar radiation below which will be no transpiration (ranges from 
+    %~30 W/m^2 for trees to ~100 W/m^2 for crops)
+%% compute vegetation free and soil moisture deficit free resistance as input of Penman equation
+% rc = calc_rc(0, netShort, RGL,Tair, vpd,LAI, 1, false);
+%% calculate PET using the Penman Monteith Equation
+gsm_inv(W>Wcr)=1;
+gsm_inv(W<Wwp)=0;
+indexLinear=(W<=Wcr)&(W>=Wwp);
+indexZeroIntCap=Wim==0;
+indexZeroLAI=LAI==0;
+gsm_inv(indexLinear)=(W(indexLinear) - Wwp(indexLinear))./(Wcr(indexLinear) - Wwp(indexLinear));
+rc=calc_rc(r0c,RGL,netShort,Tair,VPD,LAI,gsm_inv,bRefCrop);
+%%% $$ E_p(0), E_p(r_c)$
+[rPotEvapCanopy,~,rActEvap]=Penman(elevation,Tair,netRad,VPD,ra,rc,rarc);
+%%% $$ E^*_c=\frac{W_i}{W_{im}}E_p(0)$
+evapCanopy=(Wi./Wim).^(2/3).*rPotEvapCanopy*dt;
+evapCanopy(indexZeroLAI|indexZeroIntCap)=0;
+%%% $$ E_p(0)\Delta t$
+evapGrndMax=rPotEvapCanopy*dt;
+%VIC's implementation. CREST needs to take the overland storage into
+%consideration
+% time fraction of the evaporation.
+if dt>=SECONDS_PER_DAY
+    %%% $$ f_1= min(1,\frac{W_i+P\Delta t}{W_{im}})$
+    f1 = min(1,(Wi + rainfall)./evapCanopy);
+else
+    %%% $$ f_1=min(1,\frac{W_i}{W_{im}})$
+    f1=min(1,Wi./evapCanopy);
+end
+f1(indexZeroLAI)=0;
+canopyEnergyPart=(Wi./Wim).^(2/3);
+canopyEnergyPart(indexZeroIntCap)=0;
+if ~feedback %% routed water goes directly to channels and  does not feedback the runoff-genaration module
+    transFrac = 1-f1.*canopyEnergyPart;
+else % CREST update, routed surface water must feedback to the runoff-generatin module
+    %% 
+    % $$ ET=\Delta t \cdot \{ \matrix{f_1E^*_c+ \{[1-(\frac{W_i}{W_{im}})^{2/3}]f_1+f_3\}E_p(0)+(1-f_1-f_3)E_p(r_c)\cr 
+    %           f_1E^*_c+f_2[1-(\frac{W_i}{W_{im}})^{2/3}]E_p(0)+[(f_2-f_1)(\frac{W_i}{W_{im}})^{2/3}+1-f_2]E_p(r_c)\cr} $$
+    %
+    % where
+    %
+    % $$ f_2=min(1,\frac{S_{sto}+\Sigma R_{in}}{E_g \Delta t}) $$
+    %
+    % $$ f_3=min(1-f_1,\frac{S_{sto}+\Sigma R_{in}-f_1E_g}{E_p(0) \Delta t}) $$
+    %
+    % $$ E_g= [1-(\frac{W_i}{W_{im}})^{2/3}]E_p(0)$$
+    evapGrnd=potEvapCanopy.*(1-canopyEnergyPart)*dt;
+    f2=min(1,SSO./evapGrnd);
+    index1=f2>f1;
+    f3=min(1-f1(index1),(SSO(index1)-f1(index1).*evapGrnd(index1))./(evapGrndMax(index1)));
+    surfFrac=(1-canopyEnergyPart(index1)).*f1(index1)+f3;
+    surfFrac(index1)=surfFrac(index1).*f1(index1)+f3;
+    surfFrac(~index1)=surfFrac(~index1).*f2(~index1);
+    transFrac(index1)=1-f1(index1)-f3;
+    transFrac(~index1)=(f2(~index)-f1(~index1)).*canopyEnergyPart(~index1)+1-f2(~index1);
+end
+actEvapCanopy=f1.*evapCanopy;
+if feedback
+    actEvapGrnd=surfFrac.*evapGrndMax;
+%     ET=actEvapCanopy+surfFrac.*evapGrndMax;
+else
+    actEvapGrnd=zeros(length(Tair));
+actTranspir=transFrac.*rActEvap*dt;
+indexOverTranspir=(W-actTranspir)<Wwp;% prevent the transpirate soil moisture below the wilting point
+actTranspir(indexOverTranspir)=W(indexOverTranspir)-Wwp(indexOverTranspir);
+ET=actEvapCanopy+actEvapGrnd+actTranspir;
+end
+##### SOURCE END #####
+--></body></html>

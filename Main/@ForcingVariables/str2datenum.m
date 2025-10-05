@@ -1,0 +1,113 @@
+function dm=str2datenum(str,fmt)
+% if isSimple
+%     dm=datenum(str,fmt);
+% end
+% find year
+year=NaN;mon=NaN;day=NaN;
+hour=0;min=0;sec=0;
+
+yearInd=[strfind(fmt,'YYYY'),strfind(fmt,'yyyy')];
+if ~isempty(yearInd)
+    year=str2double(str(yearInd(1):yearInd(1)+3));
+end
+% find month
+monInd=strfind(fmt,'mm');
+monInd3=strfind(fmt,'mmm');
+if ~isempty(monInd)
+    [~,mon,~,~,~,~]=datevec(str(monInd(1):monInd(1)+1),'mm');
+end
+if ~isempty(monInd3)
+    [~,mon,~,~,~,~]=datevec(str(monInd3(1):monInd3(1)+1),'mmm');
+end
+dayInd=strfind(fmt,'dd');
+if ~isempty(dayInd)
+    [~,~,day,~,~,~]=datevec(str(dayInd(1):dayInd(1)+1),'dd');
+end
+hourInd=strfind(fmt,'HH');
+if ~isempty(hourInd)
+    [~,~,~,hour,~,~]=datevec(str(hourInd(1):hourInd(1)+1),'HH');
+end
+minInd=strfind(fmt,'MM');
+if ~isempty(minInd)
+    [~,~,~,~,min,~]=datevec(str(minInd(1):minInd(1)+1),'MM');
+end
+secInd=strfind(fmt,'SS');
+if ~isempty(secInd)
+    [~,~,~,~,~,sec]=datevec(str(secInd(1):secInd(1)+1),'SS');
+end
+
+foreIndM=[strfind(fmt,'LLUU'),strfind(fmt,'lluu')];
+foreInd=[strfind(fmt,'LL'),strfind(fmt,'ll')];
+if ~isempty(foreIndM)
+    hourL=str2double(str(foreIndM(1):foreIndM(1)+1));
+    [~,~,~,~,~,minL,~]=datevec(str(foreIndM(1)+2:foreIndM(1)+3),'MM');
+    hour=hour+hourL;
+    min=min+minL;
+elseif ~isempty(foreInd)
+    hourL=str2double(str(foreInd(1):foreInd(1)+1));
+    hour=hour+hourL;
+end
+
+doyInd=[strfind(fmt,'DOY'),strfind(fmt,'doy')];
+if ~isempty(doyInd)
+    doyInd=doyInd(1);
+    try
+        doy=str2double(str(doyInd:doyInd+2));
+        doyEnd=doyInd+2;
+    catch
+        try
+            doy=str2double(str(doyInd:doyInd+1));
+            doyEnd=doyInd+1;
+        catch
+            doy=str2double(str(doyInd));
+            doyEnd=doyInd;
+        end
+    end
+end
+%% remove doy parts
+if ~isempty(doyInd) 
+    str(doyInd:doyEnd)=[];
+    fmt(doyInd:doyInd+2)=[];
+end
+%% extract the last string
+[~,str,ext]=fileparts(str);
+str=[str,ext];
+[~,fmt,ext]=fileparts(fmt);
+fmt=[fmt,ext];
+%% remove all non-numeric chars
+NNInd=[];
+for i=1:length(str)
+    if ~isstrprop(str(i), 'digit')
+        NNInd=[NNInd,i];
+    end
+end
+str(NNInd)=[];
+fmt(NNInd)=[];
+%% remove any digits in format
+NNInd=[];
+for i=1:length(fmt)
+    if isstrprop(fmt(i),'digit')
+        NNInd=[NNInd,i];
+    end
+end
+str(NNInd)=[];
+fmt(NNInd)=[];
+if isempty(str)
+    dm=datenum(year,1,1);
+elseif ~isempty([strfind(fmt,'YYYY'),strfind(fmt,'yyyy')])
+    try
+        dm=datenum(str,fmt);
+    catch
+    end
+else % incomplete date string
+    if isnan(year) || isnan(mon) || isnan(day)
+        error('cannot interprete the external date time format ')
+    else
+        dm=datenum(year,mon,day,hour,min,sec);
+    end
+end
+if ~isempty(doyInd)
+    [year,~,~,hour,min,sec]=datevec(dm);
+    dm=datenum(year,1,1,hour,min,sec)+doy-1;
+end
+end

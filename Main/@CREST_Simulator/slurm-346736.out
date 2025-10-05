@@ -1,0 +1,18 @@
+0: MATLAB is selecting SOFTWARE OPENGL rendering.
+0: License checkout failed.
+0: License Manager Error -96
+0: MATLAB is unable to connect to the license server. 
+0: Make sure that the MATLAB client machine can communicate with the hostname listed in the SERVER line
+0: of the license file, and that the port listed in the SERVER line is not blocked by a firewall.
+0: 
+0: Troubleshoot this issue by visiting: 
+0: http://www.mathworks.com/support/lme/R2016a/96
+0: 
+0: Diagnostic Information:
+0: Feature: MATLAB 
+0: License path: /apps2/matlab/uits.lic:/home/xis14008/.matlab/R2016a_licenses:/gpfs/gpfs1/apps2/matlab/2016a/license
+0: s/license.dat:/gpfs/gpfs1/apps2/matlab/2016a/licenses/network.lic 
+0: Licensing error: -96,7. System Error: 2
+0: 
+srun: error: cn265: task 0: Exited with exit code 1
+srun: Terminating job step 346736.0
