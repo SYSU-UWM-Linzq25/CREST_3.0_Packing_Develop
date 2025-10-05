@@ -1,5 +1,0 @@
-function checkLocStartPerm(this)
-while exist('/work/clean.completed',file)==2
-    
-end
-end
