@@ -1,3 +1,0 @@
-function OutputVarRouting(this)
-
-end
