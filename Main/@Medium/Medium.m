@@ -35,7 +35,6 @@ classdef Medium<handle
         hasSnow;
     end
     methods (Access=public)
-        function this=Medium(nCells,CH_positive,CH_negative,moisture,TSurf,nLayers)
         function this=Medium(nCells,row,col,rows,cols,...
                 CH_positive,CH_negative,moisture,TSurf,nLayers)
             this.nLayers=nLayers;
