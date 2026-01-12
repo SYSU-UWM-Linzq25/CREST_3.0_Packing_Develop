@@ -1,18 +1,19 @@
-function covers=ReadVegLib(libPath,nCover)
+function covers=ReadVegLib(libPath)
  fid=fopen(libPath);
  title=textscan(fid,'%s',53,'Delimiter',',');
- formatSpec='%d,%d,%d,%f,%f';% overstory,bare,RArc,rmin
+ formatSpec='%d %d %d %f %f';% overstory,bare,RArc,rmin
  for i=1:12% albedo
-     formatSpec=[formatSpec,',%f'];
+     formatSpec=[formatSpec,' %f'];
  end
  for i=1:12% vegetation roughness
-     formatSpec=[formatSpec,',%f'];
+     formatSpec=[formatSpec,' %f'];
  end
  for i=1:12%displacement
-     formatSpec=[formatSpec,',%f'];
+     formatSpec=[formatSpec,' %f'];
  end
- formatSpec=[formatSpec,',%d,%f,%f,%f,%f,%f,%f,%f,%f,%f,%f,%s'];%wind_h,RGL,rad_atten,wind_atten,Trunk Ratio
- raw=textscan(fid,formatSpec,'Delimiter','/t');
+ formatSpec=[formatSpec,' %d %f %f %f %f %f %f %f %f %f %f %s'];%wind_h,RGL,rad_atten,wind_atten,Trunk Ratio
+ raw=textscan(fid,formatSpec,'Delimiter',',');
+ nCover=length(raw{1});
  covers(nCover)=Cover(nCover);
 %              covers=covers';
  iStartAlbedo=6;

@@ -115,7 +115,7 @@ try
         %basinVar.basinMask = basinVar.basinMask & totalValidMask;
     end
     %% initialize model parameters
-    modelPar=ModelParameters(globalPar.paramPath,basinVar.basinMask,basinVar.geoTrans,basinVar.spatialRef);
+    modelPar=ModelParameters(globalPar.taskType,globalPar.paramPath,basinVar.basinMask,basinVar.geoTrans,basinVar.spatialRef);    
     %% create the state-variable object
     if ~strcmpi(globalPar.taskType,'Routing')
         stateVar=StateVariables(hydroSites,...

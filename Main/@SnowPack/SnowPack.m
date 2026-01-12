@@ -23,7 +23,7 @@ classdef SnowPack<Medium
             % roughness: initial snow roughness from parameter file
             global CH_WATER CH_ICE
             this=this@Medium(nCells,CH_WATER,CH_ICE,NaN,NaN,1);
-            this.roughness=modelPar.snowRgh(modelPar.basinMask);
+            this.roughness=modelPar.snowRgh(modelPar.tileMask); % TileMask for Part load - Aug 30th 2025 - Linzq25
             this.isOverstory=isOverstory;
             this.swqTotal=nan(this.nCells,1);
             this.CCPack=nan(this.nCells,1);

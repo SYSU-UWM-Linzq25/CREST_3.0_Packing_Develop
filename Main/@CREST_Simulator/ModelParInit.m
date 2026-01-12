@@ -28,7 +28,9 @@ if strcmpi(this.globalVar.taskType,'Routing')
 end
 %% initialize medium
 if ~strcmpi(this.globalVar.taskType,'Routing')
-    this.soilSurf=SoilSurf(this.modelPar,this.globalVar.paramPath,this.dt,node,nNodes);
+    [rows,cols]=size(this.modelPar.basinMask);
+    [row,col]=find(this.modelPar.basinMask);
+    this.soilSurf=SoilSurf(row,col,rows,cols,this.modelPar,this.globalVar.paramPath,this.dt,node,nNodes);
     this.nCells=this.soilSurf.nCells;
     this.snowpack=SnowPack(this.nCells,this.soilSurf.isOverstory,this.modelPar);
     if sum(this.soilSurf.isOverstory)>0

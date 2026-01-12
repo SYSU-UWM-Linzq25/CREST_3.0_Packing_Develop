@@ -3,7 +3,7 @@ Total_startTime = tic;
 curFile = mfilename('fullpath');
 [curDir,~,~]=fileparts(curFile);
 [progDir,~,~]=fileparts(curDir);
-addpath([progDir,'/IO']);
+addpath([progDir,'/Support/IO']);
 globalPar=GlobalParameters(ctlFile);
 %% locate the communication folder
 switch globalPar.OS

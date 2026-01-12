@@ -304,5 +304,24 @@ classdef ForcingVariables<RasterVariables
         fe=fileExist(fileName);% check the existence of a file including HDF/netCDF
         
     end
+    % Release memory - Aug 28th, 2025, Linzq25
+    methods
+        function releaseMemory(obj)
+            mc = metaclass(obj);
+            fprintf('Releasing memory for object of class: %s\n', class(obj));
+            for k = 1:length(mc.PropertyList)
+                prop = mc.PropertyList(k);
+                if ~prop.Constant && ~prop.Dependent && prop.SetAccess == "public"
+                    propName = prop.Name;
+                    try
+                        obj.(propName) = [];
+                        fprintf('  Cleared property: %s\n', propName);
+                    catch ME
+                        warning('  Failed to clear property: %s (%s)', propName, ME.message);
+                    end
+                end
+            end
+        end
+    end
 end
 

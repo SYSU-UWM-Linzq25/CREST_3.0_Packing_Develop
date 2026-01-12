@@ -1,3 +1,4 @@
+%% update history
 classdef Medium<handle
     properties(Access=public)
         nCells;
@@ -31,12 +32,12 @@ classdef Medium<handle
         %%% converted to a desired height according to the curren medium
         adj_displacement;
         %%% the desired height of wind speed and aerodynamic
-        adj_ref_height;
         hasSnow;
     end
     methods (Access=public)
         function this=Medium(nCells,CH_positive,CH_negative,moisture,TSurf,nLayers)
-            this.nCells=nCells;
+        function this=Medium(nCells,row,col,rows,cols,...
+                CH_positive,CH_negative,moisture,TSurf,nLayers)
             this.nLayers=nLayers;
             this.CH_positive=CH_positive;
             this.CH_negative=CH_negative;
@@ -45,20 +46,20 @@ classdef Medium<handle
                 this.W=ones(this.nCells,nLayers);
                 this.WThru=nan(this.nCells,nLayers);
                 this.TWThru=nan(this.nCells,nLayers);
-                this.adj_displacement=nan(this.nCells,1);
-                this.adj_ref_height=nan(this.nCells,1);
-                this.RAero=nan(this.nCells,1);
-                this.UAdj=nan(this.nCells,1);
-                this.albedo=nan(this.nCells,1);
+                % this.adj_displacement=nan(this.nCells,1);
+                % this.adj_ref_height=nan(this.nCells,1);
+                % this.RAero=nan(this.nCells,1);
+                % this.UAdj=nan(this.nCells,1);
+                % this.albedo=nan(this.nCells,1);
             else
                 this.W=[];
                 this.WThru=[];
                 this.TWThru=[];
-                this.adj_displacement=[];
-                this.adj_ref_height=[];
-                this.RAero=[];
-                this.UAdj=[];
-                this.albedo=[];
+                % this.adj_displacement=[];
+                % this.adj_ref_height=[];
+                % this.RAero=[];
+                % this.UAdj=[];
+                % this.albedo=[];
             end
            %% medium moisture
             if isscalar(moisture)
@@ -88,11 +89,11 @@ classdef Medium<handle
         aerodynamic(this,varargin);
         surfaceAeroPar(this,wind_h,varargin);
         varargout=LatentHeat(this,dt,RaC,TSurfTemp,eActAir,vpd,varargin);
+
+        
     end
     methods(Static)
         [correction,hasWind]=StabilityCorrection(nCells,UAdj,roughness,adj_displacement,adj_ref_height,TSurfTemp,Tair);
     end
-    methods(Abstract, Static)
-        [RaC,sensibleHeat,longUpward,varargout]=outwardFluxes(TMediumTemp,TSurrTemp,airDens,varargin);
-    end
+    
 end
