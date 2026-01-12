@@ -80,9 +80,9 @@ while(~bEnd)
     [~,~,dayCur,hourCur,minCur,secCur]=datevec(this.forcingVar.dateCur);
     switch (this.globalVar.runStyle)
         case 'simu'
-%             if dayCur==15 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
-              if dayCur==10 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
-                this.saveChkPt(coreNo,nCores);
+            %if dayCur==15 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
+            if dayCur==10 && hourCur==hourEnd &&minCur==minEnd && secCur==secEnd
+               this.saveChkPt(coreNo,nCores);
             end
         case 'analysis'
             if hourCur==11 &&minCur==minEnd && secCur==secEnd   %marika

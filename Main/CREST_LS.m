@@ -12,14 +12,14 @@ curFile = mfilename('fullpath');
 [curDir,~,~]=fileparts(curFile);
 [progDir,~,~]=fileparts(curDir);
 
-addpath([progDir,'/MEX']);
-addpath([progDir,'/IO']);
-addpath([progDir,'/Numeric']);
-addpath([progDir,'/Numeric/lindfield-penny2/na_funcs']);
+addpath([progDir,'/MEX_2.3.0']);
+addpath([progDir,'/Support/IO']);
+addpath([progDir,'/Support/Numeric']);
+addpath([progDir,'/Support/Numeric/lindfield-penny2/na_funcs']);
 addpath([curDir,'/common']);
 addpath([curDir,'/energy_balances']);
-addpath([progDir,'/optimization_npl']);
-addpath([progDir,'/ThirdPartyM/xticklabel_rotate']);
+addpath([progDir,'/Support/optimization_npl']);
+addpath([progDir,'/Support/ThirdPartyM/xticklabel_rotate']);
 %sysBit=mexext;
 %if strcmpi(sysBit,'mexw64')==1
 %    dllDir=[progDir,'\DLL'];

@@ -54,7 +54,8 @@ while exist(fileChkPt,'file')~=2 && (this.forcingVar.dateStart-dateLastSave<=max
                 mon=12;
                 year=year-1;    
             end
-            dateLastSave=datenum(year,mon,15,hour,min,sec);
+            % dateLastSave=datenum(year,mon,15,hour,min,sec);
+            dateLastSave=datenum(year,mon,10,hour,min,sec); % Modify for NCE Project - Oct 25th,2025 - Linzq25
         case 'analysis'
             dateLastSave=ForcingVariables.addDatenum(dateLastSave,-datenum(0,0,0,12,0,0));
   %% begin 2)
@@ -75,12 +76,15 @@ while exist(fileChkPt,'file')~=2 && (this.forcingVar.dateStart-dateLastSave<=max
 %     end
     
 %     year=2010;mon=10;%test
-    if strcmpi(this.globalVar.runStyle,'forecast') || strcmpi(this.globalVar.runStyle,'analysis')
-        fmtChkPt=this.globalVar.timeFormatLS;
-    else
-        fmtChkPt=this.forcingVar.fmtSubDir;
-    end
-    
+    % if strcmpi(this.globalVar.runStyle,'forecast') || strcmpi(this.globalVar.runStyle,'analysis')
+    %     fmtChkPt=this.globalVar.timeFormatLS;
+    % else
+    %     fmtChkPt=this.forcingVar.fmtSubDir;
+    % end
+
+    % Modify for NCE Project - Oct 25th,2025 - Linzq25
+    fmtChkPt=this.globalVar.timeFormatLS;
+
     if exist('core','var') && exist('nCores','var')
         fileChkPt=StateVariables.GenerateOutVarNames(this.globalVar.resPathChkPts,...
             dateLastSave,this.globalVar.timeFormatLS,...
