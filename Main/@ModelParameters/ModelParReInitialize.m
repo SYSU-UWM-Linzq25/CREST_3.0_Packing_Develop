@@ -9,20 +9,11 @@ if  nargin==3%
     this.scaleSC(this.calibIndices)=x0;
 end
 for i=1:this.nModelParSC
-    varName = this.parSC{i};
-    % Judge which mask to use
-    if isequal(size(this.(varName)), size(this.tileMask))
-        maskName = 'tileMask';
-    elseif isequal(size(this.(varName)), size(this.basinMask))
-        maskName = 'basinMask';
-    else
-        error(['[ERROR] Variable ', varName, ' does not match tileMask or basinMask in size.']);
-    end
-
-    cmdAmp  = strcat('this.', varName, '(this.', maskName, ') = this.', ...
-                     varName, '0(this.', maskName, ') * this.scaleSC(i);');
-    cmdAmp2 = strcat('indNan = isnan(this.', varName, ') & this.', maskName, ';');
-    cmdAmp3 = strcat('this.', varName, '(indNan) = min(min(this.', varName, '));');
+    cmdAmp=strcat('this.',this.parSC{i},...
+        '(this.basinMask)=this.',this.parSC{i},...
+        '0(this.basinMask)*this.scaleSC(i);');
+    cmdAmp2=['indNan=isnan(this.',this.parSC{i},')&this.basinMask;'];
+    cmdAmp3=['this.',this.parSC{i},'(indNan)=min(min(this.',this.parSC{i},'));'];
     eval(cmdAmp);
     eval(cmdAmp2);
     eval(cmdAmp3);

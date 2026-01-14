@@ -38,13 +38,6 @@ if strcmpi(mode,'calib')
 else
     this.ModelParInit(coreNo,nCores);
 end
-
-% Part load ImportForc - Modified Linzq25 Aug 30th 2025
-this.forcingVar.tileRowMin = this.modelPar.rowse(1);
-this.forcingVar.tileRowMax = this.modelPar.rowse(2);
-this.forcingVar.tileColMin = this.modelPar.colse(1);
-this.forcingVar.tileColMax = this.modelPar.colse(2);
-
 this.stateVar.preset(this.basicVar.lake);
 this.forcingVar.reset(mode,this.globalVar.taskType,false,coreNo,nCores);
 this.presetMedium();

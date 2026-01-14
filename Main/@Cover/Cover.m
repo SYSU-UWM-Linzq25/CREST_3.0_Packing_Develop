@@ -45,7 +45,7 @@ classdef Cover<handle
         end
     end
     methods(Static=true)
-        covers=ReadVegLib(libPath);
+        covers=ReadVegLib(libPath,nCover);
         order=GetOrder(covers,uc);
     end
 end

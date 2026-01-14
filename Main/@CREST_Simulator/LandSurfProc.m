@@ -196,6 +196,6 @@ this.rainBare=this.updateAllMedium(T(this.soilSurf.isOverstory,1),T(this.soilSur
     dCCSurf,dCCPack,refrozenIcePack,energyPhaseChange_pack,vaporMassEvap_pack,vaporMassSub_pack,...
     evap_soil,evapGrnd_soil,transpir_soil);
 
-% this.soilSurf.runoffGen(this.rainBare,'linear',this.modelPar.IM(this.modelPar.basinMask));
-this.soilSurf.runoffGen(this.rainBare,'linear',this.modelPar.IM(this.modelPar.tileMask)); % TileMask for Part load - Aug 30th 2025 - Linzq25
+this.soilSurf.runoffGen(this.rainBare,'linear',this.modelPar.IM(this.modelPar.basinMask));
+
 end

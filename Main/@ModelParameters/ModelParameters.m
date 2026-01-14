@@ -81,11 +81,6 @@ classdef ModelParameters <RasterVariables
       %% calibration related coefficients
        scaleMC;% scaling factors of multi-layer coeffcients 
        scaleSC;% scaling factors of singlye layered coefficients
-
-       % Tile range for Part load - Aug 30th 2025 - Linzq25
-       rowse
-       colse
-       tileMask
     end
     properties(Access = private)
 %         basinMask;% 
@@ -97,7 +92,7 @@ classdef ModelParameters <RasterVariables
         keywordsLAI={'LAI1','LAI2','LAI3','LAI4','LAI5','LAI6','LAI7','LAI8','LAI9','LAI10','LAI11','LAI12','LAI13'}; 
     end
     methods
-        function obj=ModelParameters(taskType,pDir,basinMask,geoTransBasic,spatialRefBasic)
+        function obj=ModelParameters(pDir,basinMask,geoTransBasic,spatialRefBasic)
             obj=obj@RasterVariables(geoTransBasic,spatialRefBasic);
             obj.basinMask=basinMask;
             pFile=ModelParameters.GenerateFileNames(pDir);
@@ -105,137 +100,79 @@ classdef ModelParameters <RasterVariables
             pFileID = fopen(pFile);
             commentSymbol='#';       
             veglibPath=[pDir,ModelParameters.ReadAKeyword(pFileID,'CoverLib',commentSymbol)];
-            % nClasses=str2double(ModelParameters.ReadAKeyword(pFileID,'NClasses',commentSymbol));
+            nClasses=str2double(ModelParameters.ReadAKeyword(pFileID,'NClasses',commentSymbol));
+            %% read vegetation/cover parameters
+            obj.covers=Cover.ReadVegLib(veglibPath,nClasses);
+            %% read soil paramters
             obj.nLayers=str2double(ModelParameters.ReadAKeyword(pFileID,'nLayers',commentSymbol));
-
-            if strcmpi(taskType,'Routing')
-                %% read management parameters
-                obj.thTorrent=str2double(ModelParameters.ReadAKeyword(pFileID,'thTorrent',commentSymbol));
-                %% dam parameters
-                obj.dam_Cd=str2double(ModelParameters.ReadAKeyword(pFileID,'dam_Cd',commentSymbol));
+            obj.depths=zeros(1,obj.nLayers);
+            for l=1:obj.nLayers
+                obj.depths(l)=str2double(ModelParameters.ReadAKeyword(pFileID,['depth_',num2str(l)],commentSymbol));
             end
-
-            if strcmpi(taskType,'LandSurf')
-
-                % Generate the Tile range for Part load - Aug 30th 2025 - Linzq25
-                [row,col]=find(basinMask);
-                rowse = [min(row),max(row)];
-                colse = [min(col),max(col)];
-
-                % Tile range for Part load - Aug 30th 2025 - Linzq25
-                obj.rowse = rowse;
-                obj.colse = colse;
-
-                % only LandSurface tileMask is different
-                obj.tileMask = basinMask(rowse(1):rowse(2), colse(1):colse(2));
-
-                if exist('rowse','var') && ~isempty(rowse)
-                    row0=rowse(1);
-                    col0=colse(1);
-                    rows=rowse(2)-rowse(1)+1;
-                    cols=colse(2)-colse(1)+1;
-                else
-                    row0=1;col0=1;
-                    [rows,cols]=size(basinMask);
-                end
-     
-                %% read vegetation/cover parameters
-                obj.covers=Cover.ReadVegLib(veglibPath);
-                %% read soil paramters
-                obj.depths=zeros(1,obj.nLayers);
-                for l=1:obj.nLayers
-                    obj.depths(l)=str2double(ModelParameters.ReadAKeyword(pFileID,['depth_',num2str(l)],commentSymbol));
-                end
-                obj.dp=str2double(ModelParameters.ReadAKeyword(pFileID,'dp',commentSymbol));
-                obj.optSoilThermal=ModelParameters.ReadAKeyword(pFileID,'SoilThermal',commentSymbol);
-                strEvap=ModelParameters.ReadAKeyword(pFileID,'EvapSurfWater',commentSymbol);
-                if strcmpi(strEvap,'yes')
-                    obj.evapSurfWater=true;
-                else
-                    obj.evapSurfWater=false;
-                end
-                obj.nModelParSC=length(obj.parSC);
-                obj.nModelParMC=length(obj.parMC);
-                obj.nModelParSUC=length(obj.parSUC);
-                for i=1:obj.nModelParSUC
-                    cmdInitialize=strcat('obj.',obj.parSUC{i},'=obj.Initialize([],rows,cols);');
-                    cmdFrmGlobal=strcat('[value,bDistr]=ModelParameters.readVarInfo(pFileID,[]',...
-                        ',''',obj.keyworSUC{i},''',''',commentSymbol,''',pDir,''',...
-                        obj.bPathExtSUC{i},''',''',obj.pathExtSUC{i},''',','obj.geoTrans,obj.spatialRef,obj.basinMask);');
-                    cmdToVar2=strcat('obj.',obj.parSUC{i},'= ReadRaster(value,row0,col0,rows,cols);');                    
-                    eval(cmdInitialize);
-                    eval(cmdFrmGlobal);
-                    %                 eval(cmdToVar);
-                    eval(cmdToVar2);
-                end
-                %% read layered hydraulic properties
-                for i=1:obj.nModelParMC
-                    % read the number of input layers
-                    cmdNlayers=['nLayersPar=str2double(ModelParameters.ReadAKeyword(pFileID,''',obj.keyword_nLayerMC{i},''',commentSymbol));'];
-                    % initialize depths
-                    cmdInitDepth=['obj.' obj.depthMC{i} '=zeros(nLayersPar,1);'];
-                    eval(cmdNlayers);
-                    eval(cmdInitDepth);
-                    % initialize the parameter
-                    cmdInitialize=strcat('obj.',obj.parMC{i},'=obj.Initialize(nLayersPar,rows,cols);');
-                    % original value of the parameters
-                    eval(cmdInitialize);
-                    for l=1:nLayersPar
-                        cmdFrmGlobal=strcat('[value,bDistr]=ModelParameters.readVarInfo(pFileID,''',...
-                            obj.typeMC{i},''',''',obj.keywordMC{i},'_',num2str(l),''',''',commentSymbol,''',pDir,','[],[],',...
-                            'obj.geoTrans,obj.spatialRef,obj.basinMask);');
-                        cmdToVar2=strcat('if ~bDistr' ,' obj.',obj.parMC{i},...
-                            '(:,:,l)= value; else ',' obj.',obj.parMC{i},'(:,:,l)= ReadRaster(value,row0,col0,rows,cols); end');
-                        cmdReadDepth=['obj.',obj.depthMC{i},'(',num2str(l),')','=str2double(ModelParameters.ReadAKeyword(pFileID,''',obj.keywordMC{i},'_depth_',num2str(l),''',commentSymbol));'];
-                        eval(cmdFrmGlobal);
-                        eval(cmdToVar2);
-                        eval(cmdReadDepth);
-                    end
-                end
-                obj.scaleMC=ones(obj.nModelParMC,length(obj.depthMC{1}));
-                
-                for i=1:obj.nModelParSC
-                    cmdInitialize=strcat('obj.',obj.parSC{i},'=obj.Initialize([],rows,cols);');
-                    cmdInitialize2=strcat('obj.',obj.parSC{i},'0=obj.Initialize([],rows,cols);');
+            obj.dp=str2double(ModelParameters.ReadAKeyword(pFileID,'dp',commentSymbol));
+            obj.optSoilThermal=ModelParameters.ReadAKeyword(pFileID,'SoilThermal',commentSymbol);
+            strEvap=ModelParameters.ReadAKeyword(pFileID,'EvapSurfWater',commentSymbol);
+            if strcmpi(strEvap,'yes')
+                obj.evapSurfWater=true;
+            else
+                obj.evapSurfWater=false;
+            end
+            obj.nModelParSC=length(obj.parSC);
+            obj.nModelParMC=length(obj.parMC);
+            obj.nModelParSUC=length(obj.parSUC);
+            for i=1:obj.nModelParSUC
+                cmdInitialize=strcat('obj.',obj.parSUC{i},'=obj.Initialize();');
+                cmdFrmGlobal=strcat('[value,bDistr]=ModelParameters.readVarInfo(pFileID,[]',...
+                    ',''',obj.keyworSUC{i},''',''',commentSymbol,''',pDir,''',...
+                    obj.bPathExtSUC{i},''',''',obj.pathExtSUC{i},''',','obj.geoTrans,obj.spatialRef,obj.basinMask);');
+                cmdToVar2=strcat('obj.',obj.parSUC{i},'= ReadRaster(value);');
+                eval(cmdInitialize);
+                eval(cmdFrmGlobal);
+%                 eval(cmdToVar);
+                eval(cmdToVar2);
+            end
+            %% read layered hydraulic properties
+            for i=1:obj.nModelParMC 
+                % read the number of input layers
+                cmdNlayers=['nLayersPar=str2double(ModelParameters.ReadAKeyword(pFileID,''',obj.keyword_nLayerMC{i},''',commentSymbol));'];
+                % initialize depths
+                cmdInitDepth=['obj.' obj.depthMC{i} '=zeros(nLayersPar,1);'];
+                eval(cmdNlayers);
+                eval(cmdInitDepth);
+                % initialize the parameter
+                cmdInitialize=strcat('obj.',obj.parMC{i},'=obj.Initialize(nLayersPar);');
+                % original value of the parameters
+                eval(cmdInitialize);
+                for l=1:nLayersPar
                     cmdFrmGlobal=strcat('[value,bDistr]=ModelParameters.readVarInfo(pFileID,''',...
-                        obj.keywordTypeSC{i},''',''',obj.keywordSC{i},''',''',commentSymbol,''',pDir,''',...
-                        obj.bPathExtSC{i},''',''',obj.pathExtSC{i},''',','obj.geoTrans,obj.spatialRef,obj.basinMask);');
-                    cmdToVar2=strcat('if ~bDistr' ,' obj.',obj.parSC{i},...
-                        '0(obj.tileMask)= value; else ',...
-                        ' obj.',obj.parSC{i},'0= ReadRaster(value,row0,col0,rows,cols); end'); % Tile range for Part load - Aug 30th 2025 - Linzq25
-                    eval(cmdInitialize);
-                    eval(cmdInitialize2);
+                    obj.typeMC{i},''',''',obj.keywordMC{i},'_',num2str(l),''',''',commentSymbol,''',pDir,','[],[],',...
+                    'obj.geoTrans,obj.spatialRef,obj.basinMask);');
+                    cmdToVar2=strcat('if ~bDistr' ,' obj.',obj.parMC{i},...
+                       '(:,:,:)= value; else ',' obj.',obj.parMC{i},'(:,:,l)= ReadRaster(value); end');
+                    cmdReadDepth=['obj.',obj.depthMC{i},'(',num2str(l),')','=str2double(ModelParameters.ReadAKeyword(pFileID,''',obj.keywordMC{i},'_depth_',num2str(l),''',commentSymbol));'];                    
                     eval(cmdFrmGlobal);
-                    %                 eval(cmdToVar);
                     eval(cmdToVar2);
+                    eval(cmdReadDepth);
                 end
-                obj.scaleSC=ones(obj.nModelParSC,1);
             end
-
-            if strcmpi(taskType,'Routing')
-                %% read vegetation/cover parameters
-                obj.covers=Cover.ReadVegLib(veglibPath);
-
-                obj.nModelParSC=length(obj.parSC);
-                for i=1:obj.nModelParSC
-                    cmdInitialize=strcat('obj.',obj.parSC{i},'=obj.Initialize();');
-                    cmdInitialize2=strcat('obj.',obj.parSC{i},'0=obj.Initialize();');
-                    cmdFrmGlobal=strcat('[value,bDistr]=ModelParameters.readVarInfo(pFileID,''',...
-                        obj.keywordTypeSC{i},''',''',obj.keywordSC{i},''',''',commentSymbol,''',pDir,''',...
-                        obj.bPathExtSC{i},''',''',obj.pathExtSC{i},''',','obj.geoTrans,obj.spatialRef,obj.basinMask);');
-                    cmdToVar2=strcat('if ~bDistr' ,' obj.',obj.parSC{i},...
-                        '0(obj.basinMask)= value; else ',...
-                        ' obj.',obj.parSC{i},'0= ReadRaster(value); end'); 
-                    eval(cmdInitialize);
-                    eval(cmdInitialize2);
-                    eval(cmdFrmGlobal);
-                    %                 eval(cmdToVar);
-                    eval(cmdToVar2);
-                end
-                obj.scaleSC=ones(obj.nModelParSC,1);
+            for i=1:obj.nModelParSC
+                cmdInitialize=strcat('obj.',obj.parSC{i},'=obj.Initialize();');
+                cmdInitialize2=strcat('obj.',obj.parSC{i},'0=obj.Initialize();');
+                cmdFrmGlobal=strcat('[value,bDistr]=ModelParameters.readVarInfo(pFileID,''',...
+                    obj.keywordTypeSC{i},''',''',obj.keywordSC{i},''',''',commentSymbol,''',pDir,''',...
+                    obj.bPathExtSC{i},''',''',obj.pathExtSC{i},''',','obj.geoTrans,obj.spatialRef,obj.basinMask);');
+                cmdToVar2=strcat('if ~bDistr' ,' obj.',obj.parSC{i},...
+                       '0(obj.basinMask)= value; else ',...
+                        ' obj.',obj.parSC{i},'0= ReadRaster(value); end');
+                eval(cmdInitialize);
+                eval(cmdInitialize2);
+                eval(cmdFrmGlobal);
+%                 eval(cmdToVar);
+                eval(cmdToVar2);
             end
-
             fclose(pFileID);
+            obj.scaleSC=ones(obj.nModelParSC,1);
+            obj.scaleMC=ones(obj.nModelParMC,length(obj.depthMC{1}));
 %             obj.ModelParReInitialize();
         end
         soilSurf=ModelParReInitialize(this,x0,calibKeywords);
@@ -243,25 +180,6 @@ classdef ModelParameters <RasterVariables
     methods(Static)
         function fileModelPar=GenerateFileNames(parDir)
             fileModelPar=parDir;
-        end
-    end
-    % Release memory - Aug 28th, 2025, Linzq25
-    methods
-        function releaseMemory(obj)
-            mc = metaclass(obj);
-            fprintf('Releasing memory for object of class: %s\n', class(obj));
-            for k = 1:length(mc.PropertyList)
-                prop = mc.PropertyList(k);
-                if ~prop.Constant && ~prop.Dependent && prop.SetAccess == "public"
-                    propName = prop.Name;
-                    try
-                        obj.(propName) = [];
-                        fprintf('  Cleared property: %s\n', propName);
-                    catch ME
-                        warning('  Failed to clear property: %s (%s)', propName, ME.message);
-                    end
-                end
-            end
         end
     end
 end

@@ -50,20 +50,6 @@ if ischar(nCores)
     nCores = str2double(nCores);
 end
 
-% CREST Memory Monitor - Aug 29th 2025 - Linzq25
-[ctlFolder, ~, ~] = fileparts(globalCtlFile);
-logcsv = fullfile(ctlFolder, 'Mem_monitor_logs');
-if ~exist(logcsv, 'dir')
-    mkdir(logcsv);
-end
-
-% 构造日志文件名
-pid = feature('getpid');
-logfile = sprintf(fullfile(logcsv, 'Mem_Monitor_core%02d_pid%d.csv'), coreNo, pid);
-disp(['[Memory Monitor] starting at: ', logfile]);
-crestStartMemLogger(logfile, 1);
-disp('[Memory Monitor] started.');
-
 % Choose which task type to run
 if ~exist('TaskIndex','var') || isempty(TaskIndex)
     runSingleTask = false;
@@ -91,9 +77,9 @@ root_com_folder = fileparts(globalPar.forcingCtl);
 % CREST Packing - April 19th 2025 - Linzq25
 % Choose which task type to run
 if runSingleTask
-    taskIndices = TaskIndex;
+    taskIndices = TaskIndex; 
 else
-    taskIndices = 1:length(taskTypes);
+    taskIndices = 1:length(taskTypes); 
 end
 
 for taskIdx = taskIndices
@@ -103,44 +89,30 @@ for taskIdx = taskIndices
     while exist(comFolder,'dir')~=7
         pause(5);
     end
-
-    % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-    crestMarkMemLoggerStep('Start Var Cleaning');
-
     % Check if basinVar exists
     if exist('basinVar', 'var')
-        basinVar.releaseMemory();
         clear basinVar;
     end
 
     % Check if hydroSites exists
     if exist('hydroSites', 'var')
-        hydroSites.releaseMemory();
         clear hydroSites;
     end
 
     % Check if modelPar exists
     if exist('modelPar', 'var')
-        modelPar.releaseMemory();
         clear modelPar;
     end
 
     % Check if forcingVar exists
     if exist('forcingVar', 'var')
-        forcingVar.releaseMemory();
         clear forcingVar;
     end
 
     % Check if simulator exists
     if exist('simulator', 'var')
-        simulator.releaseMemory();
         clear simulator;
     end
-
-    % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-    pause(3);
-    crestMarkMemLoggerStep('End Var Cleaning');
-
     if strcmpi(globalPar.taskType,'Mosaic')
         CREST_Simulator.makeMosaicLocDir(globalPar.resPathInitLoc,pathSplitor,nCores)
     end
@@ -215,7 +187,7 @@ for taskIdx = taskIndices
             basinVar.basinMask = basinVar.basinMask & totalValidMask;
         end
         %% initialize model parameters
-        modelPar=ModelParameters(globalPar.taskType,globalPar.paramPath,basinVar.basinMask,basinVar.geoTrans,basinVar.spatialRef);
+        modelPar=ModelParameters(globalPar.paramPath,basinVar.basinMask,basinVar.geoTrans,basinVar.spatialRef);
         %% create the state-variable object
         if ~strcmpi(globalPar.taskType,'Routing')
             stateVar=StateVariables(hydroSites,...
@@ -267,26 +239,11 @@ for taskIdx = taskIndices
                         NSCE=simulator.Simulate_Routing();
                         stateVar.SaveStates(globalPar.resPathEx);
                     case 'LandSurf'
-                        disp('land surface process...')
-                        % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-                        crestMarkMemLoggerStep('Start LandSurf');
                         simulator.Simulate_LandSurf(coreNo,nCores);
-                        % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-                        crestMarkMemLoggerStep('End LandSurf');
                     case 'ImportForc'
-                        disp('import forcing...')
-                        % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-                        crestMarkMemLoggerStep('Start ImportForc');
                         simulator.ImportForcing(coreNo,nCores)
-                        % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-                        crestMarkMemLoggerStep('End ImportForc');
                     case 'Mosaic'
-                        disp('mosaic...')
-                        % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-                        crestMarkMemLoggerStep('Start Mosaic');
                         simulator.mosaic(coreNo,nCores);
-                        % CREST Memory Monitor - Aug 29th 2025 - Linzq25
-                        crestMarkMemLoggerStep('End Mosaic');
                 end
             case 'analysis'
                 switch globalPar.taskType
@@ -382,10 +339,5 @@ for taskIdx = taskIndices
         end
     end
 end
-
-% CREST Memory Monitor - Aug 29th 2025 - Linzq25
-cleanupObj = onCleanup(@() crestStopMemLogger());   % stop at unnormal 
-crestStopMemLogger();
-disp('[Memory Monitor] end.');
 end
 

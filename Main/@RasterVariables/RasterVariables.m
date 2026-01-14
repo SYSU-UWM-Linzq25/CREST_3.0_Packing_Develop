@@ -15,30 +15,15 @@ classdef RasterVariables<handle
                 obj.pathSplitor='/';
             end
         end
-        function var = Initialize(obj, nLayers, rowsize, colsize)
-            % the function must be called after the basinMask has been obtained
-            % For Part load - Aug 30th 2025 - Linzq25
-            % Extended Initialize function: support subgrid initialization
-            % Usage:
-            %   obj.Initialize() → full size 2D
-            %   obj.Initialize(nLayers) → full size 3D
-            %   obj.Initialize([], rows, cols) → subgrid 2D
-            %   obj.Initialize(nLayers, rows, cols) → subgrid 3D
-            if nargin == 1  % Only obj
-                [rows, cols] = size(obj.basinMask);
-                var = zeros(rows, cols);
-                var(~obj.basinMask) = NaN;
-            elseif nargin == 2  % obj + nLayers
-                [rows, cols] = size(obj.basinMask);
-                var = zeros(rows, cols, nLayers);
-            elseif nargin == 4  % subgrid
-                if isempty(nLayers)
-                    var = zeros(rowsize, colsize);  % 2D tile
-                else
-                    var = zeros(rowsize, colsize, nLayers);  % 3D tile
-                end
+        function var=Initialize(obj,nLayers)
+            % the function must be called after the basinMask has been
+            % obtained
+            [rows,columns]=size(obj.basinMask);
+            if nargin==1
+                var=zeros(rows,columns);
+                var(~obj.basinMask)=NaN;
             else
-                error('Invalid usage of Initialize().');
+                var=zeros(rows,columns,nLayers);
             end
         end
         function [ind,bInBasin]=sub2indInBasin(obj,matRow,matCol)

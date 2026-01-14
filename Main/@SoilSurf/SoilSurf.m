@@ -1,5 +1,3 @@
-%% upgrade history
-% 1) prepare to replace basinMask by (row, col, rows,cols)
 classdef SoilSurf<Medium
     properties
        %% 2d parameters due to layered soil
@@ -54,15 +52,11 @@ classdef SoilSurf<Medium
         wind_h;% wind_h
     end
     methods(Access=public)
-        function this=SoilSurf(row,col,rows,cols,modelPar,filePar,dt,node,nNodes)
+        function this=SoilSurf(modelPar,filePar,dt,node,nNodes)
             [dirPar,~,~]=fileparts(filePar);
             fileSurf=[dirPar,'/soilSurf_',num2str(node),'_',num2str(nNodes),'.mat'];
-            nCells=sum(sum(modelPar.tileMask));
-            %% 1)
-            this=this@Medium(nCells,row,col,rows,cols,...
-                NaN,NaN,NaN,NaN,modelPar.nLayers);
-            %% end 1)
-
+            nCells=sum(sum(modelPar.basinMask));
+            this=this@Medium(nCells,NaN,NaN,NaN,NaN,modelPar.nLayers);
             if exist(fileSurf,'file')==2
                 load(fileSurf);
                 return;
@@ -71,11 +65,10 @@ classdef SoilSurf<Medium
             
             %soil thermal properties are calculated dynamically based on
             %the current soil moisture
-            classMap=modelPar.LCC1(modelPar.tileMask); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            classMap=modelPar.LCC1(modelPar.basinMask);
             [uc,~,ic]=unique(classMap);
             order=Cover.GetOrder(modelPar.covers,uc);
             this.index=order(ic);
-
             this.isOverstory=logical([modelPar.covers(this.index).isOverstory]');
             this.isBare=logical([modelPar.covers(this.index).isBare]');
             this.D1=modelPar.depths(1);
@@ -92,35 +85,35 @@ classdef SoilSurf<Medium
             this.r0c(this.isOverstory)=NaN;
            %% this may be replaced
             this.wind_h=double([modelPar.covers(this.index).wind_h]');
-            this.roughness=modelPar.soilRgh(modelPar.tileMask); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.roughness=modelPar.soilRgh(modelPar.basinMask);
             this.roughness(~(this.isBare|this.isOverstory))=NaN;
 %             this.displacement(this.isBare|this.isOverstory)=this.roughness(this.isBare|this.isOverstory)/0.123*(2/3);
             this.albedo(this.isBare|this.isOverstory)=BARE_SOIL_ALBEDO;
            %% infiltration curve parameter
-            this.b_infilt=modelPar.B(modelPar.tileMask); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.b_infilt=modelPar.B(modelPar.basinMask);
            %% soil layered properties
             % hydraulic properties
-            this.FC=this.RedistVar(modelPar.FC,modelPar.depthFC,modelPar.tileMask,'weighted_adding',true,0.01); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.FC=this.RedistVar(modelPar.FC,modelPar.depthFC,modelPar.basinMask,'weighted_adding',true,0.01);
             modelPar.FC=[];
-            this.Wm=this.RedistVar(modelPar.Sat,modelPar.depthSat,modelPar.tileMask,'weighted_adding',true,0.01); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.Wm=this.RedistVar(modelPar.Sat,modelPar.depthSat,modelPar.basinMask,'weighted_adding',true,0.01);
             modelPar.Sat=[];
-            this.Wwp=this.RedistVar(modelPar.Wwp,modelPar.depthWwp,modelPar.tileMask,'weighted_adding',true,0.01); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.Wwp=this.RedistVar(modelPar.Wwp,modelPar.depthWwp,modelPar.basinMask,'weighted_adding',true,0.01);
             modelPar.Wwp=[];
             this.Wcr=(1-0.4)*(this.FC-this.Wwp)+this.Wwp;
-            this.Ksat=this.RedistVar(modelPar.Ksat,modelPar.depthKsat,modelPar.tileMask,'min',false,dt); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.Ksat=this.RedistVar(modelPar.Ksat,modelPar.depthKsat,modelPar.basinMask,'min',false,dt);
             modelPar.Ksat=[];
             this.Wwp(this.isBare)=NaN;
             this.Wcr(this.isBare)=NaN;
             % soil properties
-            this.organic=this.RedistVar(modelPar.OM,modelPar.depthOM,modelPar.tileMask,'weighted_adding',false,0.01); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.organic=this.RedistVar(modelPar.OM,modelPar.depthOM,modelPar.basinMask,'weighted_adding',false,0.01);
             modelPar.OM=[];
-            this.bulk_density=this.RedistVar(modelPar.bd,modelPar.depthbd,modelPar.tileMask,'weighted_adding',false,1); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.bulk_density=this.RedistVar(modelPar.bd,modelPar.depthbd,modelPar.basinMask,'weighted_adding',false,1);
             modelPar.bd=[];
            %% single layer/uniform properties
-            this.moist_resid=modelPar.mvRes(modelPar.tileMask)*m2mm*this.depths(1); % TileMask for Part load - Aug 30th 2025 - Linzq25
+            this.moist_resid=modelPar.mvRes(modelPar.basinMask)*m2mm*this.depths(1);
             this.quartz=zeros(this.nCells,this.nLayers);
             for l=1:this.nLayers
-                this.quartz(:,l)=modelPar.soilQuartz(modelPar.tileMask); % TileMask for Part load - Aug 30th 2025 - Linzq25
+                this.quartz(:,l)=modelPar.soilQuartz(modelPar.basinMask);
             end
             this.CalSoilDensity();
             this.soil_dens_min=this.soil_density;
@@ -130,7 +123,6 @@ classdef SoilSurf<Medium
             this.ice=nan(this.nCells,this.nLayers);
             this.Wperc=nan(this.nCells,this.nLayers);
             this.WmVeg=nan(this.nCells,1);
-            this.lakeFrac=zeros(this.nCells,1);
             this.CalRoot(modelPar.covers);
             save([dirPar,'/soilSurf_',num2str(node),'.mat'], 'this');
         end
@@ -139,14 +131,14 @@ classdef SoilSurf<Medium
         updateDailyParameter(this,LAI);
         intercept(this,feedback,rainfall);
         [Ra,windAdj]=aerodynamic(this,wind,displacement,ref_height);
-        surfaceAeroPar(this);
+        surfaceAeroPar(this,wind_h,treeHeight);
         update_thermal_properties(this);
         runoffGen(this,rainfall,optInfil,IM);
     end
     methods (Access=private)
         CalRootFrac(this,covers);
         CalSoilDensity(this);
-        infiltrate(this,optInfil,Qd);
+        infiltrate(this,optInfil,Qd,rainBare,IM);
         layeredVar=RedistVar(this,varExt,varExtDepths,basinMask,method,scaledByDepth,percent2abs);
     end
     methods (Static)
